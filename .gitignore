@@ -1,0 +1,12 @@
+/config.php
+/programacion-config.php
+.env
+.env.*
+!.env.example
+*.bak
+*.old
+*.pem
+*.key
+*.sql.gz
+*.zip
+*.log

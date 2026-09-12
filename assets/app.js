@@ -1,0 +1,736 @@
+(() => {
+    'use strict';
+
+    const LEGACY_STORAGE_KEY = 'programacion-cultos-v1';
+    const LOCAL_TEMPLATES_KEY = 'programacion-cultos-templates-v2';
+    const appConfig = window.APP_CONFIG;
+    const spanishDays = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    const spanishMonths = ['Ene.', 'Feb.', 'Mar.', 'Abr.', 'May.', 'Jun.', 'Jul.', 'Ago.', 'Sept.', 'Oct.', 'Nov.', 'Dic.'];
+    const sheet = document.querySelector('#programSheet');
+    const previewArea = document.querySelector('#previewArea');
+    const rowsContainer = document.querySelector('#programRows');
+    const controlsContainer = document.querySelector('#rowControls');
+    const rowTemplate = document.querySelector('#rowTemplate');
+    const saveStatus = document.querySelector('#saveStatus');
+    const templateSelect = document.querySelector('#templateSelect');
+    const templateName = document.querySelector('#templateName');
+    const deleteTemplateButton = document.querySelector('#deleteTemplateButton');
+    const pageControls = document.querySelector('#pageControls');
+    const printPages = document.querySelector('#printPages');
+    let templates = [];
+    let activeTemplate = { id: null, version: null };
+    let dirty = false;
+    let busy = false;
+
+    const clone = (value) => JSON.parse(JSON.stringify(value));
+
+    function normalizePage(value) {
+        const defaults = clone(window.DEFAULT_STATE);
+        const page = { ...defaults, ...(value || {}) };
+        delete page.design;
+        delete page.logo;
+        page.headers = Array.isArray(page.headers) ? page.headers.slice(0, 3) : clone(defaults.headers);
+        while (page.headers.length < 3) page.headers.push(defaults.headers[page.headers.length]);
+        page.rows = Array.isArray(page.rows) && page.rows.length ? clone(page.rows) : clone(defaults.rows);
+        page.rows = page.rows.map((row) => ({ ...row, id: row.id || makeId() }));
+        return page;
+    }
+
+    function normalizeDocument(value) {
+        const defaults = clone(window.DEFAULT_STATE);
+        if (value && Array.isArray(value.pages) && value.pages.length) {
+            return {
+                formatVersion: 2,
+                logo: typeof value.logo === 'string' ? value.logo : '',
+                design: { ...defaults.design, ...(value.design || {}) },
+                pages: value.pages.map(normalizePage),
+            };
+        }
+        return {
+            formatVersion: 2,
+            logo: typeof value?.logo === 'string' ? value.logo : '',
+            design: { ...defaults.design, ...(value?.design || {}) },
+            pages: [normalizePage(value || defaults)],
+        };
+    }
+
+    function serializeDocument() {
+        return {
+            formatVersion: 2,
+            logo: documentState.logo,
+            design: clone(documentState.design),
+            pages: documentState.pages.map((page) => {
+                const copy = clone(page);
+                delete copy.design;
+                delete copy.logo;
+                return copy;
+            }),
+        };
+    }
+
+    function initialDocument() {
+        if (appConfig.storageMode === 'local') {
+            try {
+                const legacy = JSON.parse(localStorage.getItem(LEGACY_STORAGE_KEY));
+                if (legacy && Array.isArray(legacy.rows) && Array.isArray(legacy.headers)) {
+                    return normalizeDocument(legacy);
+                }
+            } catch (error) {
+                console.warn('No se pudo recuperar el borrador anterior.', error);
+            }
+        }
+        return normalizeDocument(window.DEFAULT_STATE);
+    }
+
+    let documentState = initialDocument();
+    let activePageIndex = 0;
+    let state;
+
+    function activatePage(index) {
+        activePageIndex = Math.max(0, Math.min(index, documentState.pages.length - 1));
+        state = documentState.pages[activePageIndex];
+        state.design = documentState.design;
+        state.logo = documentState.logo;
+    }
+
+    activatePage(0);
+
+    function formatDate(value) {
+        if (!value) return 'Selecciona una fecha';
+        const date = new Date(`${value}T12:00:00`);
+        if (Number.isNaN(date.getTime())) return value;
+        return `${spanishDays[date.getDay()]} ${String(date.getDate()).padStart(2, '0')} ${spanishMonths[date.getMonth()]}`;
+    }
+
+    function makeId() {
+        return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+    }
+
+    function setStatus(message, type = '') {
+        saveStatus.textContent = message;
+        saveStatus.dataset.status = type;
+    }
+
+    function markDirty() {
+        dirty = true;
+        setStatus('Cambios sin guardar', 'pending');
+    }
+
+    function setBusy(value) {
+        busy = value;
+        document.querySelectorAll('.template-manager button, .template-manager select').forEach((element) => {
+            element.disabled = value || (element === deleteTemplateButton && !activeTemplate.id);
+        });
+    }
+
+    async function api(action, options = {}) {
+        const response = await fetch(`api.php?action=${encodeURIComponent(action)}${options.query || ''}`, {
+            method: options.method || 'GET',
+            credentials: 'same-origin',
+            headers: options.body ? {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': appConfig.csrfToken,
+            } : {},
+            body: options.body ? JSON.stringify(options.body) : undefined,
+        });
+        let result;
+        try {
+            result = await response.json();
+        } catch (error) {
+            throw new Error('El servidor devolvió una respuesta inválida.');
+        }
+        if (response.status === 401) {
+            window.location.assign('login.php');
+            throw new Error('La sesión expiró.');
+        }
+        if (!response.ok) throw new Error(result.error || 'No se pudo completar la operación.');
+        return result;
+    }
+
+    function localRecords() {
+        try {
+            const stored = JSON.parse(localStorage.getItem(LOCAL_TEMPLATES_KEY));
+            return Array.isArray(stored) ? stored : [];
+        } catch (error) {
+            return [];
+        }
+    }
+
+    function writeLocalRecords(records) {
+        localStorage.setItem(LOCAL_TEMPLATES_KEY, JSON.stringify(records));
+    }
+
+    async function loadTemplateList(selectedId = activeTemplate.id) {
+        if (appConfig.storageMode === 'server') {
+            templates = (await api('list')).templates;
+        } else {
+            templates = localRecords()
+                .map(({ content, ...summary }) => summary)
+                .sort((a, b) => String(b.updated_at).localeCompare(String(a.updated_at)));
+        }
+        templateSelect.replaceChildren(new Option('Nueva plantilla sin guardar', ''));
+        templates.forEach((template) => {
+            templateSelect.add(new Option(template.name, String(template.id)));
+        });
+        templateSelect.value = selectedId ? String(selectedId) : '';
+        deleteTemplateButton.disabled = !activeTemplate.id;
+    }
+
+    async function fetchTemplate(id) {
+        if (appConfig.storageMode === 'server') {
+            return (await api('get', { query: `&id=${encodeURIComponent(id)}` })).template;
+        }
+        const template = localRecords().find((item) => String(item.id) === String(id));
+        if (!template) throw new Error('Plantilla no encontrada.');
+        return clone(template);
+    }
+
+    async function saveTemplate(asCopy = false) {
+        if (busy) return;
+        if (!allPagesFit()) {
+            alert('Una de las programaciones no cabe en una hoja A4. Corrige las filas o tamaños antes de guardar.');
+            return;
+        }
+        const name = templateName.value.trim();
+        if (!name) {
+            templateName.focus();
+            alert('Escribe un nombre para guardar la plantilla.');
+            return;
+        }
+        setBusy(true);
+        setStatus('Guardando de forma segura…');
+        try {
+            if (appConfig.storageMode === 'server') {
+                const result = await api('save', {
+                    method: 'POST',
+                    body: {
+                        id: asCopy ? null : activeTemplate.id,
+                        version: asCopy ? null : activeTemplate.version,
+                        name,
+                        content: serializeDocument(),
+                    },
+                });
+                activeTemplate = { id: result.template.id, version: result.template.version };
+            } else {
+                const records = localRecords();
+                const id = asCopy || !activeTemplate.id ? makeId() : activeTemplate.id;
+                const existingIndex = records.findIndex((item) => String(item.id) === String(id));
+                const version = existingIndex >= 0 ? Number(records[existingIndex].version) + 1 : 1;
+                const record = { id, name, version, updated_at: new Date().toISOString(), content: serializeDocument() };
+                if (existingIndex >= 0) records[existingIndex] = record;
+                else records.push(record);
+                writeLocalRecords(records);
+                localStorage.removeItem(LEGACY_STORAGE_KEY);
+                activeTemplate = { id, version };
+            }
+            dirty = false;
+            await loadTemplateList(activeTemplate.id);
+            setStatus('Plantilla guardada', 'saved');
+        } catch (error) {
+            setStatus('No se pudo guardar', 'error');
+            alert(error.message);
+        } finally {
+            setBusy(false);
+        }
+    }
+
+    async function selectTemplate(id) {
+        if (!id) {
+            startNewTemplate();
+            return;
+        }
+        setBusy(true);
+        setStatus('Cargando plantilla…');
+        try {
+            const template = await fetchTemplate(id);
+            documentState = normalizeDocument(template.content);
+            activatePage(0);
+            activeTemplate = { id: template.id, version: Number(template.version) };
+            templateName.value = template.name;
+            dirty = false;
+            placeStaticContent();
+            renderRows();
+            renderPageControls();
+            templateSelect.value = String(template.id);
+            setStatus('Plantilla cargada', 'saved');
+        } catch (error) {
+            templateSelect.value = activeTemplate.id ? String(activeTemplate.id) : '';
+            setStatus('No se pudo cargar', 'error');
+            alert(error.message);
+        } finally {
+            setBusy(false);
+        }
+    }
+
+    function startNewTemplate() {
+        documentState = normalizeDocument(window.DEFAULT_STATE);
+        activatePage(0);
+        activeTemplate = { id: null, version: null };
+        templateName.value = '';
+        templateSelect.value = '';
+        dirty = false;
+        placeStaticContent();
+        renderRows();
+        renderPageControls();
+        deleteTemplateButton.disabled = true;
+        setStatus('Nueva plantilla sin guardar');
+    }
+
+    async function deleteTemplate() {
+        if (!activeTemplate.id || busy) return;
+        if (!confirm(`¿Eliminar permanentemente la plantilla “${templateName.value}”?`)) return;
+        setBusy(true);
+        try {
+            if (appConfig.storageMode === 'server') {
+                await api('delete', { method: 'POST', body: { id: activeTemplate.id, version: activeTemplate.version } });
+            } else {
+                writeLocalRecords(localRecords().filter((item) => String(item.id) !== String(activeTemplate.id)));
+            }
+            startNewTemplate();
+            await loadTemplateList();
+            setStatus('Plantilla eliminada');
+        } catch (error) {
+            setStatus('No se pudo eliminar', 'error');
+            alert(error.message);
+        } finally {
+            setBusy(false);
+        }
+    }
+
+    function placeStaticContent() {
+        document.querySelectorAll('[data-field]').forEach((element) => {
+            element.textContent = state[element.dataset.field] || '';
+        });
+        document.querySelectorAll('[data-header]').forEach((element) => {
+            element.textContent = state.headers[Number(element.dataset.header)] || '';
+        });
+        updateLogo();
+        updateDesign();
+    }
+
+    function updateLogo() {
+        const image = document.querySelector('#churchLogo');
+        const emblem = document.querySelector('#defaultEmblem');
+        if (state.logo) {
+            image.src = state.logo;
+            image.hidden = false;
+            emblem.hidden = true;
+        } else {
+            image.removeAttribute('src');
+            image.hidden = true;
+            emblem.hidden = false;
+        }
+    }
+
+    function updateDesign() {
+        const design = state.design;
+        const images = {
+            headerImage: document.querySelector('#headerDecorationImage'),
+            headerLeftImage: document.querySelector('#headerLeftImage'),
+            headerRightImage: document.querySelector('#headerRightImage'),
+            watermarkImage: document.querySelector('#customWatermarkImage'),
+            footerImage: document.querySelector('#customFooterImage'),
+            verseFrameImage: document.querySelector('#verseFrameImage'),
+        };
+        Object.entries(images).forEach(([field, image]) => {
+            if (design[field]) {
+                image.src = design[field];
+                image.hidden = false;
+            } else {
+                image.removeAttribute('src');
+                image.hidden = true;
+            }
+        });
+
+        document.querySelector('#defaultHeaderLeft').hidden = Boolean(design.headerLeftImage);
+        document.querySelector('#defaultHeaderRight').hidden = Boolean(design.headerRightImage);
+        document.querySelector('#defaultFooter').hidden = Boolean(design.footerImage);
+        document.querySelector('.verse-card').classList.toggle('has-custom-frame', Boolean(design.verseFrameImage));
+
+        const numeric = (field) => Number(design[field]);
+        document.querySelector('#designRuntimeStyles').textContent = `
+            #headerDecorationImage { height: ${numeric('headerHeight')}px; opacity: ${numeric('headerOpacity') / 100}; }
+            #headerLeftImage, #defaultHeaderLeft { width: ${numeric('headerLeftSize')}px; opacity: ${numeric('headerLeftOpacity') / 100}; }
+            #headerRightImage, #defaultHeaderRight { width: ${numeric('headerRightSize')}px; opacity: ${numeric('headerRightOpacity') / 100}; }
+            #defaultHeaderLeft { height: ${numeric('headerLeftSize')}px; }
+            #defaultHeaderRight { font-size: ${Math.round(numeric('headerRightSize') * 0.52)}px; }
+            #customWatermarkImage, .page-watermark { width: ${numeric('watermarkSize')}px; opacity: ${numeric('watermarkOpacity') / 100}; left: ${numeric('watermarkX')}%; top: ${numeric('watermarkY')}%; }
+            #customFooterImage, #defaultFooter, .page-custom-footer, .page-default-footer { height: ${numeric('footerHeight')}px; opacity: ${numeric('footerOpacity') / 100}; }
+            .program-sheet { padding-bottom: ${numeric('footerHeight')}px; }
+            .logo-wrap { height: ${Math.max(104, numeric('logoSize'))}px; }
+            #churchLogo { max-width: ${numeric('logoSize')}px; max-height: ${numeric('logoSize')}px; }
+            .verse-card { min-height: ${numeric('verseHeight')}px; }
+            .verse-card .reference { left: ${numeric('verseReferenceX')}%; top: ${numeric('verseReferenceY')}%; font-size: ${numeric('referenceFontSize')}px; }
+            .church-name { font-size: ${numeric('churchNameFontSize')}px; }
+            .congregation { font-size: ${numeric('congregationFontSize')}px; }
+            .program-title { font-size: ${numeric('programTitleFontSize')}px; }
+            .program-table th { font-size: ${numeric('tableHeaderFontSize')}px; }
+            .program-table tbody { font-size: ${numeric('tableBodyFontSize')}px; }
+            .verse-card blockquote { font-size: ${numeric('verseFontSize')}px; }
+            .coordinator-label { font-size: ${numeric('coordinatorLabelFontSize')}px; }
+            .coordinators { font-size: ${numeric('coordinatorsFontSize')}px; }
+        `;
+
+        document.querySelectorAll('[data-design-setting]').forEach((input) => {
+            input.value = design[input.dataset.designSetting];
+            const output = input.dataset.output ? document.querySelector(`#${input.dataset.output}`) : null;
+            if (output) output.textContent = `${input.value}${input.dataset.unit || ' px'}`;
+        });
+    }
+
+    function readDesignImage(input) {
+        const [file] = input.files;
+        if (!file) return;
+        if (file.size > 2 * 1024 * 1024 || !['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+            alert('Usa una imagen PNG, JPEG o WebP de menos de 2 MB.');
+            input.value = '';
+            return;
+        }
+        const reader = new FileReader();
+        reader.addEventListener('load', () => {
+            state.design[input.dataset.designImage] = reader.result;
+            updateDesign();
+            renderRows();
+            markDirty();
+        });
+        reader.readAsDataURL(file);
+    }
+
+    function createRow(row) {
+        const fragment = rowTemplate.content.cloneNode(true);
+        const tableRow = fragment.querySelector('tr');
+        tableRow.dataset.rowId = row.id;
+        tableRow.classList.toggle('is-special', row.special);
+        fragment.querySelector('.print-date').textContent = formatDate(row.date);
+        fragment.querySelectorAll('[data-row-field]').forEach((editor) => {
+            editor.textContent = row[editor.dataset.rowField] || '';
+        });
+        return fragment;
+    }
+
+    function pageCapacity() {
+        const design = state.design;
+        const rowHeight = Math.max(45, Number(design.tableBodyFontSize) * 2.7);
+        const logoExtra = Math.max(0, Number(design.logoSize) - 104);
+        const available = 1123 - 300 - logoExtra - Number(design.footerHeight) - Number(design.verseHeight) - 190;
+        return Math.max(1, Math.floor(available / rowHeight));
+    }
+
+    function renderRows() {
+        rowsContainer.replaceChildren();
+        controlsContainer.replaceChildren();
+        state.rows.forEach((row) => rowsContainer.append(createRow(row)));
+
+        state.rows.forEach((row, index) => {
+            const control = document.createElement('div');
+            control.className = 'row-control';
+            control.dataset.rowId = row.id;
+            control.innerHTML = '<div class="row-control-top"><input type="date"><button type="button" class="remove-row" title="Eliminar fila" aria-label="Eliminar fila">×</button></div><label class="special-toggle"><input type="checkbox"><span>Fila especial (unir 2 columnas)</span></label>';
+            const dateInput = control.querySelector('input[type="date"]');
+            dateInput.value = row.date || '';
+            dateInput.setAttribute('aria-label', `Fecha de la fila ${index + 1}`);
+            control.querySelector('input[type="checkbox"]').checked = Boolean(row.special);
+            controlsContainer.append(control);
+        });
+
+        const capacity = pageCapacity();
+        const warning = document.querySelector('#pageFitWarning');
+        const exceeds = state.rows.length > capacity;
+        warning.hidden = !exceeds;
+        warning.textContent = exceeds ? `Esta programación tiene ${state.rows.length} filas y solo caben ${capacity}. Elimina filas o reduce los tamaños antes de guardar.` : '';
+        sheet.classList.toggle('page-overflow', exceeds);
+        document.querySelector('#addRowButton').disabled = state.rows.length >= capacity;
+        document.querySelector('#addRowButtonBottom').disabled = state.rows.length >= capacity;
+    }
+
+    function addRow() {
+        if (state.rows.length >= pageCapacity()) {
+            alert('Esta hoja A4 ya está completa. Agrega otra programación para continuar.');
+            return;
+        }
+        const previous = state.rows[state.rows.length - 1];
+        let date = '';
+        if (previous?.date) {
+            const next = new Date(`${previous.date}T12:00:00`);
+            next.setDate(next.getDate() + 7);
+            date = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-${String(next.getDate()).padStart(2, '0')}`;
+        }
+        state.rows.push({ id: makeId(), date, directors: '', preacher: '', special: false, specialText: 'Culto especial' });
+        renderRows();
+        markDirty();
+        controlsContainer.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function renderPageControls() {
+        pageControls.replaceChildren();
+        documentState.pages.forEach((page, index) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = `page-control${index === activePageIndex ? ' is-active' : ''}`;
+            button.dataset.pageIndex = String(index);
+            const title = page.programTitle || `Programación ${index + 1}`;
+            button.textContent = `${index + 1}. ${title.length > 38 ? `${title.slice(0, 38)}…` : title}`;
+            pageControls.append(button);
+        });
+        document.querySelector('#deletePageButton').disabled = documentState.pages.length === 1;
+        document.querySelector('#movePageUpButton').disabled = activePageIndex === 0;
+        document.querySelector('#movePageDownButton').disabled = activePageIndex === documentState.pages.length - 1;
+    }
+
+    function showPage(index) {
+        activatePage(index);
+        placeStaticContent();
+        renderRows();
+        renderPageControls();
+    }
+
+    function addProgramPage(duplicateCurrent = false) {
+        let page;
+        if (duplicateCurrent) {
+            page = normalizePage(clone(state));
+            page.rows = page.rows.map((row) => ({ ...row, id: makeId() }));
+        } else {
+            page = normalizePage(window.DEFAULT_STATE);
+            page.churchName = state.churchName;
+            page.congregation = state.congregation;
+            page.headers = clone(state.headers);
+            page.coordinatorLabel = state.coordinatorLabel;
+            page.coordinators = state.coordinators;
+            page.rows = page.rows.map((row) => ({ ...row, id: makeId() }));
+        }
+        documentState.pages.splice(activePageIndex + 1, 0, page);
+        showPage(activePageIndex + 1);
+        markDirty();
+    }
+
+    function moveProgramPage(direction) {
+        const target = activePageIndex + direction;
+        if (target < 0 || target >= documentState.pages.length) return;
+        const [page] = documentState.pages.splice(activePageIndex, 1);
+        documentState.pages.splice(target, 0, page);
+        showPage(target);
+        markDirty();
+    }
+
+    function deleteProgramPage() {
+        if (documentState.pages.length === 1) return;
+        if (!confirm('¿Eliminar esta programación del documento?')) return;
+        documentState.pages.splice(activePageIndex, 1);
+        showPage(Math.min(activePageIndex, documentState.pages.length - 1));
+        markDirty();
+    }
+
+    function allPagesFit() {
+        const capacity = pageCapacity();
+        return documentState.pages.every((page) => page.rows.length <= capacity);
+    }
+
+    function buildPageElement(pageData) {
+        const page = sheet.cloneNode(true);
+        page.removeAttribute('id');
+        page.classList.remove('page-overflow');
+        page.querySelectorAll('[data-field]').forEach((element) => {
+            element.textContent = pageData[element.dataset.field] || '';
+        });
+        page.querySelectorAll('[data-header]').forEach((element) => {
+            element.textContent = pageData.headers[Number(element.dataset.header)] || '';
+        });
+        const body = page.querySelector('#programRows');
+        body.removeAttribute('id');
+        body.replaceChildren();
+        pageData.rows.forEach((row) => body.append(createRow(row)));
+        return page;
+    }
+
+    function buildPrintPages() {
+        printPages.replaceChildren();
+        documentState.pages.forEach((page) => printPages.append(buildPageElement(page)));
+    }
+
+    function cleanWordHtml(node) {
+        const copy = node.cloneNode(true);
+        copy.querySelectorAll('[contenteditable]').forEach((element) => {
+            element.textContent = element.innerText;
+            element.removeAttribute('contenteditable');
+        });
+        copy.querySelectorAll('[hidden]').forEach((element) => element.remove());
+        return copy.outerHTML;
+    }
+
+    function exportWord() {
+        if (!allPagesFit()) {
+            alert('Una de las programaciones no cabe en una hoja A4. Corrige las filas o tamaños antes de exportar.');
+            return;
+        }
+        buildPrintPages();
+        const styles = Array.from(document.styleSheets)
+            .map((styleSheet) => {
+                try { return Array.from(styleSheet.cssRules).map((rule) => rule.cssText).join('\n'); }
+                catch (error) { return ''; }
+            })
+            .join('\n');
+        const pages = Array.from(printPages.querySelectorAll('.program-sheet')).map(cleanWordHtml).join('');
+        const documentHtml = `<!doctype html><html><head><meta charset="utf-8"><style>${styles}\n.program-sheet{box-shadow:none;margin:0 auto;page-break-after:always}.program-sheet:last-child{page-break-after:auto}.app-header,.editor-panel{display:none}.program-table thead{display:table-header-group}.program-table tr,.verse-card,.sheet-footer{page-break-inside:avoid}</style></head><body>${pages}</body></html>`;
+        const blob = new Blob(['\ufeff', documentHtml], { type: 'application/msword' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `${(state.programTitle || 'programacion').toLowerCase().replace(/[^a-z0-9áéíóúñ]+/gi, '-')}.doc`;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+    }
+
+    previewArea.addEventListener('input', (event) => {
+        const field = event.target.closest('[data-field]');
+        const header = event.target.closest('[data-header]');
+        const rowField = event.target.closest('[data-row-field]');
+        if (field) {
+            state[field.dataset.field] = field.innerText.trim();
+            if (field.dataset.field === 'programTitle') renderPageControls();
+        }
+        if (header) {
+            const index = Number(header.dataset.header);
+            state.headers[index] = header.innerText.trim();
+        }
+        if (rowField) {
+            const tableRow = rowField.closest('tr');
+            const row = state.rows.find((item) => item.id === tableRow.dataset.rowId);
+            if (row) row[rowField.dataset.rowField] = rowField.innerText.trim();
+        }
+        markDirty();
+    });
+
+    previewArea.addEventListener('paste', (event) => {
+        const editable = event.target.closest('[contenteditable]');
+        if (!editable) return;
+        event.preventDefault();
+        const text = event.clipboardData?.getData('text/plain') || '';
+        document.execCommand('insertText', false, text);
+    });
+
+    controlsContainer.addEventListener('change', (event) => {
+        const control = event.target.closest('.row-control');
+        const row = state.rows.find((item) => item.id === control?.dataset.rowId);
+        if (!row) return;
+        if (event.target.matches('input[type="date"]')) row.date = event.target.value;
+        if (event.target.matches('input[type="checkbox"]')) row.special = event.target.checked;
+        renderRows();
+        markDirty();
+    });
+
+    controlsContainer.addEventListener('click', (event) => {
+        const removeButton = event.target.closest('.remove-row');
+        if (!removeButton) return;
+        if (state.rows.length === 1) {
+            alert('La tabla debe conservar al menos una fila.');
+            return;
+        }
+        const id = removeButton.closest('.row-control').dataset.rowId;
+        state.rows = state.rows.filter((row) => row.id !== id);
+        renderRows();
+        markDirty();
+    });
+
+    document.querySelector('#logoInput').addEventListener('change', (event) => {
+        const [file] = event.target.files;
+        if (!file) return;
+        if (file.size > 2 * 1024 * 1024 || !['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+            alert('Usa una imagen PNG, JPEG o WebP de menos de 2 MB.');
+            event.target.value = '';
+            return;
+        }
+        const reader = new FileReader();
+        reader.addEventListener('load', () => {
+            documentState.logo = reader.result;
+            state.logo = documentState.logo;
+            updateLogo();
+            markDirty();
+        });
+        reader.readAsDataURL(file);
+    });
+
+    document.querySelector('#removeLogoButton').addEventListener('click', () => {
+        documentState.logo = '';
+        state.logo = documentState.logo;
+        document.querySelector('#logoInput').value = '';
+        updateLogo();
+        markDirty();
+    });
+    document.querySelectorAll('[data-design-image]').forEach((input) => {
+        input.addEventListener('change', () => readDesignImage(input));
+    });
+    document.querySelectorAll('[data-remove-design-image]').forEach((button) => {
+        button.addEventListener('click', () => {
+            const field = button.dataset.removeDesignImage;
+            state.design[field] = '';
+            const input = document.querySelector(`[data-design-image="${field}"]`);
+            if (input) input.value = '';
+            updateDesign();
+            renderRows();
+            markDirty();
+        });
+    });
+    document.querySelectorAll('[data-design-setting]').forEach((input) => {
+        input.addEventListener('input', () => {
+            state.design[input.dataset.designSetting] = Number(input.value);
+            updateDesign();
+            markDirty();
+        });
+        input.addEventListener('change', renderRows);
+    });
+    document.querySelector('#addRowButton').addEventListener('click', addRow);
+    document.querySelector('#addRowButtonBottom').addEventListener('click', addRow);
+    pageControls.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-page-index]');
+        if (button) showPage(Number(button.dataset.pageIndex));
+    });
+    document.querySelector('#addPageButton').addEventListener('click', () => addProgramPage(false));
+    document.querySelector('#duplicatePageButton').addEventListener('click', () => addProgramPage(true));
+    document.querySelector('#movePageUpButton').addEventListener('click', () => moveProgramPage(-1));
+    document.querySelector('#movePageDownButton').addEventListener('click', () => moveProgramPage(1));
+    document.querySelector('#deletePageButton').addEventListener('click', deleteProgramPage);
+    document.querySelector('#printButton').addEventListener('click', () => {
+        if (!allPagesFit()) {
+            alert('Una de las programaciones no cabe en una hoja A4. Corrige las filas o tamaños antes de imprimir.');
+            return;
+        }
+        buildPrintPages();
+        window.print();
+    });
+    document.querySelector('#wordButton').addEventListener('click', exportWord);
+    document.querySelector('#saveTemplateButton').addEventListener('click', () => saveTemplate(false));
+    document.querySelector('#duplicateTemplateButton').addEventListener('click', () => saveTemplate(true));
+    deleteTemplateButton.addEventListener('click', deleteTemplate);
+    templateName.addEventListener('input', markDirty);
+    templateSelect.addEventListener('change', async (event) => {
+        const nextId = event.target.value;
+        if (dirty && !confirm('Hay cambios sin guardar. ¿Quieres descartarlos y abrir otra plantilla?')) {
+            templateSelect.value = activeTemplate.id ? String(activeTemplate.id) : '';
+            return;
+        }
+        await selectTemplate(nextId);
+    });
+    document.querySelector('#newButton').addEventListener('click', () => {
+        if (dirty && !confirm('¿Crear una plantilla nueva y descartar los cambios sin guardar?')) return;
+        startNewTemplate();
+    });
+    window.addEventListener('beforeunload', (event) => {
+        if (!dirty) return;
+        event.preventDefault();
+        event.returnValue = '';
+    });
+
+    async function initialize() {
+        placeStaticContent();
+        renderRows();
+        renderPageControls();
+        try {
+            await loadTemplateList();
+            setStatus(appConfig.storageMode === 'local' ? 'Modo de desarrollo local' : 'Conexión segura');
+        } catch (error) {
+            setStatus('Error de conexión', 'error');
+            alert(error.message);
+        }
+    }
+
+    initialize();
+})();
