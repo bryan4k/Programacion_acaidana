@@ -171,7 +171,7 @@ function clear_login_attempts(PDO $pdo, array $rateKeys): void
     <meta name="theme-color" content="#061d42">
     <meta http-equiv="Content-Security-Policy" content="<?= htmlspecialchars(content_security_policy($nonce), ENT_QUOTES, 'UTF-8') ?>">
     <title><?= $hasUsers ? 'Iniciar sesión' : 'Crear cuenta administradora' ?> | Programación de cultos</title>
-    <link rel="stylesheet" href="assets/styles.css">
+    <link rel="stylesheet" href="<?= htmlspecialchars(asset_url('assets/styles.css'), ENT_QUOTES, 'UTF-8') ?>">
 </head>
 <body class="auth-page">
     <main class="auth-card">

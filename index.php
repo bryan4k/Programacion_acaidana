@@ -122,7 +122,7 @@ $ushersDefaultState = [
     <meta name="theme-color" content="#0c2f68">
     <meta http-equiv="Content-Security-Policy" content="<?= htmlspecialchars(content_security_policy($nonce), ENT_QUOTES, 'UTF-8') ?>">
     <title>Programación de cultos</title>
-    <link rel="stylesheet" href="assets/styles.css">
+    <link rel="stylesheet" href="<?= htmlspecialchars(asset_url('assets/styles.css'), ENT_QUOTES, 'UTF-8') ?>">
     <style id="designRuntimeStyles" nonce="<?= htmlspecialchars($nonce, ENT_QUOTES, 'UTF-8') ?>"></style>
 </head>
 <body>
@@ -425,6 +425,6 @@ $ushersDefaultState = [
             'csrfToken' => $_SESSION['csrf'],
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
     </script>
-    <script src="assets/app.js"></script>
+    <script src="<?= htmlspecialchars(asset_url('assets/app.js'), ENT_QUOTES, 'UTF-8') ?>"></script>
 </body>
 </html>

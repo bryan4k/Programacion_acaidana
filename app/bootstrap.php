@@ -42,6 +42,14 @@ function content_security_policy(string $nonce): string
     return "default-src 'self'; script-src 'self' 'nonce-{$nonce}'; style-src 'self' 'nonce-{$nonce}'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'{$upgradePolicy}";
 }
 
+function asset_url(string $path): string
+{
+    $path = ltrim($path, '/');
+    $file = dirname(__DIR__) . '/' . $path;
+    $version = is_file($file) ? (string) filemtime($file) : '1';
+    return $path . '?v=' . rawurlencode($version);
+}
+
 function begin_secure_request(?array $config): string
 {
     $timezone = is_string($config['timezone'] ?? null) ? $config['timezone'] : 'America/Bogota';
@@ -404,6 +412,6 @@ function validate_template(mixed $input): array
 function render_configuration_error(string $nonce): never
 {
     http_response_code(503);
-    ?><!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="<?= htmlspecialchars(content_security_policy($nonce), ENT_QUOTES, 'UTF-8') ?>"><title>Configuración requerida</title><link rel="stylesheet" href="assets/styles.css"></head><body class="auth-page"><main class="auth-card"><span class="eyebrow">Instalación segura</span><h1>Falta configurar el servidor</h1><p>Completa el instalador de un solo uso para conectar MySQL, generar la clave de cifrado y crear la cuenta administradora.</p><a class="button button-gold auth-submit setup-link" href="setup.php">Iniciar configuración</a></main></body></html><?php
+    ?><!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="<?= htmlspecialchars(content_security_policy($nonce), ENT_QUOTES, 'UTF-8') ?>"><title>Configuración requerida</title><link rel="stylesheet" href="<?= htmlspecialchars(asset_url('assets/styles.css'), ENT_QUOTES, 'UTF-8') ?>"></head><body class="auth-page"><main class="auth-card"><span class="eyebrow">Instalación segura</span><h1>Falta configurar el servidor</h1><p>Completa el instalador de un solo uso para conectar MySQL, generar la clave de cifrado y crear la cuenta administradora.</p><a class="button button-gold auth-submit setup-link" href="setup.php">Iniciar configuración</a></main></body></html><?php
     exit;
 }
