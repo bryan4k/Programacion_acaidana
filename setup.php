@@ -132,6 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#061d42">
+    <meta http-equiv="Content-Security-Policy" content="<?= htmlspecialchars(content_security_policy($nonce), ENT_QUOTES, 'UTF-8') ?>">
     <title>Instalar | Programación de cultos</title>
     <link rel="stylesheet" href="assets/styles.css">
 </head>

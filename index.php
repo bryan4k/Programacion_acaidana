@@ -120,6 +120,7 @@ $ushersDefaultState = [
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#0c2f68">
+    <meta http-equiv="Content-Security-Policy" content="<?= htmlspecialchars(content_security_policy($nonce), ENT_QUOTES, 'UTF-8') ?>">
     <title>Programación de cultos</title>
     <link rel="stylesheet" href="assets/styles.css">
     <style id="designRuntimeStyles" nonce="<?= htmlspecialchars($nonce, ENT_QUOTES, 'UTF-8') ?>"></style>
