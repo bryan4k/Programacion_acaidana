@@ -328,6 +328,9 @@
         document.querySelector('#rowSectionHelp').textContent = isUshers
             ? 'Selecciona las prendas y sus colores. El dibujo del uniforme se actualiza automáticamente.'
             : 'Activa “Fila especial” para unir Directores y Predicador en esa fecha.';
+        document.querySelectorAll('[data-ushers-only]').forEach((element) => {
+            element.hidden = !isUshers;
+        });
     }
 
     function updateLogo() {
@@ -385,6 +388,7 @@
             .verse-card .reference { left: ${numeric('verseReferenceX')}%; top: ${numeric('verseReferenceY')}%; font-size: ${numeric('referenceFontSize')}px; }
             .church-name { font-size: ${numeric('churchNameFontSize')}px; }
             .congregation { font-size: ${numeric('congregationFontSize')}px; }
+            .ushers-program-label { font-size: ${numeric('ushersProgramLabelFontSize')}px; }
             .program-title, .ushers-program-title { font-size: ${numeric('programTitleFontSize')}px; }
             .program-table th { font-size: ${numeric('tableHeaderFontSize')}px; }
             .program-table tbody { font-size: ${numeric('tableBodyFontSize')}px; }
@@ -511,6 +515,20 @@
         return tableRow;
     }
 
+    function applyUshersLayout(pageElement, pageData) {
+        pageElement.classList.remove('ushers-compact', 'ushers-dense');
+        if (documentState.templateType !== 'ushers') return;
+        const visualLines = pageData.rows.reduce((total, row) => {
+            const lines = String(row.names || '').split('\n');
+            return total + Math.max(1, lines.reduce((count, line) => count + Math.max(1, Math.ceil(line.length / 32)), 0));
+        }, 0);
+        if (pageData.rows.length >= 15 || visualLines >= 30) {
+            pageElement.classList.add('ushers-dense');
+        } else if (pageData.rows.length >= 9 || visualLines >= 17) {
+            pageElement.classList.add('ushers-compact');
+        }
+    }
+
     function pageCapacity() {
         const design = state.design;
         const rowHeight = Math.max(45, Number(design.tableBodyFontSize) * 2.7);
@@ -526,6 +544,7 @@
         rowsContainer.replaceChildren();
         controlsContainer.replaceChildren();
         state.rows.forEach((row) => rowsContainer.append(createRow(row)));
+        applyUshersLayout(sheet, state);
 
         state.rows.forEach((row, index) => {
             const control = document.createElement('div');
@@ -665,6 +684,7 @@
         body.removeAttribute('id');
         body.replaceChildren();
         pageData.rows.forEach((row) => body.append(createRow(row)));
+        applyUshersLayout(page, pageData);
         return page;
     }
 
@@ -721,6 +741,7 @@
             const tableRow = rowField.closest('tr');
             const row = state.rows.find((item) => item.id === tableRow.dataset.rowId);
             if (row) row[rowField.dataset.rowField] = rowField.innerText.trim();
+            if (documentState.templateType === 'ushers') applyUshersLayout(sheet, state);
         }
         markDirty();
     });

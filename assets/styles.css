@@ -190,6 +190,24 @@ select { font: inherit; }
 .ushers-program-label { color: #081e4b; font-size: 44px; font-weight: 800; line-height: .95; text-transform: uppercase; text-shadow: 0 2px 0 #dbe2ed; }
 .ushers-program-title { margin: -3px 0 5px; color: #d99100; font-family: "Brush Script MT", "Segoe Script", cursive; font-style: italic; font-weight: 600; line-height: .9; }
 .ushers-period { display: inline-block; min-width: 310px; border-radius: 8px; padding: 5px 22px; color: #fff; background: #082457; font-size: 17px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.ushers-sheet .sheet-header, .ushers-sheet .ushers-heading, .ushers-sheet .logo-wrap, .ushers-sheet .program-table td, .ushers-sheet .garment { transition: .2s ease; }
+.ushers-sheet.ushers-compact .sheet-header { height: 184px; min-height: 184px; }
+.ushers-sheet.ushers-compact .ushers-heading { width: 112%; margin-left: -6%; transform: scale(.88); transform-origin: top center; }
+.ushers-sheet.ushers-compact .logo-wrap { transform: scale(.82); transform-origin: top left; }
+.ushers-sheet.ushers-compact .program-table td { height: 36px; padding-top: 1px; padding-bottom: 1px; }
+.ushers-sheet.ushers-compact .garment-top { width: 44px; height: 37px; }
+.ushers-sheet.ushers-compact .garment-bottom { width: 37px; height: 42px; }
+.ushers-sheet.ushers-compact .garment-dress { width: 43px; height: 52px; }
+.ushers-sheet.ushers-dense .sheet-header { height: 150px; min-height: 150px; }
+.ushers-sheet.ushers-dense .ushers-heading { width: 125%; margin-left: -12.5%; transform: scale(.76); transform-origin: top center; }
+.ushers-sheet.ushers-dense .logo-wrap { transform: scale(.66); transform-origin: top left; }
+.ushers-sheet.ushers-dense .program-table th { height: 32px; padding-top: 2px; padding-bottom: 2px; }
+.ushers-sheet.ushers-dense .program-table td { height: 31px; padding-top: 0; padding-bottom: 0; }
+.ushers-sheet.ushers-dense .names-editor { line-height: .95; }
+.ushers-sheet.ushers-dense .uniform-illustration { min-height: 31px; gap: 8px; }
+.ushers-sheet.ushers-dense .garment-top { width: 38px; height: 32px; }
+.ushers-sheet.ushers-dense .garment-bottom { width: 32px; height: 36px; }
+.ushers-sheet.ushers-dense .garment-dress { width: 36px; height: 43px; }
 .ushers-sheet .table-wrap { position: relative; z-index: 2; }
 .ushers-sheet .program-table { border: 1px solid #7792c0; border-radius: 13px; overflow: hidden; font-family: Georgia, "Times New Roman", serif; }
 .ushers-sheet .program-table th { height: 39px; border-color: #d7a21b; padding: 4px 8px; background: linear-gradient(90deg, #061c49, #0b326c, #061c49); font-weight: 700; letter-spacing: .02em; }

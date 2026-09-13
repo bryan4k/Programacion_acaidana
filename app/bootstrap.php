@@ -347,6 +347,7 @@ function validate_template(mixed $input): array
         'logoSize' => [40, 180, 100],
         'churchNameFontSize' => [12, 42, 23],
         'congregationFontSize' => [12, 42, 22],
+        'ushersProgramLabelFontSize' => [22, 64, 44],
         'programTitleFontSize' => [10, 72, 18],
         'tableHeaderFontSize' => [9, 28, 17],
         'tableBodyFontSize' => [9, 30, 17],

@@ -71,6 +71,7 @@ $defaultState = [
         'logoSize' => 100,
         'churchNameFontSize' => 23,
         'congregationFontSize' => 22,
+        'ushersProgramLabelFontSize' => 44,
         'programTitleFontSize' => 18,
         'tableHeaderFontSize' => 17,
         'tableBodyFontSize' => 17,
@@ -309,6 +310,7 @@ $ushersDefaultState = [
                 <div class="font-controls">
                     <label>Nombre iglesia <span id="churchNameFontSizeValue"></span><input type="range" data-design-setting="churchNameFontSize" data-output="churchNameFontSizeValue" min="12" max="42" step="1"></label>
                     <label>Congregación <span id="congregationFontSizeValue"></span><input type="range" data-design-setting="congregationFontSize" data-output="congregationFontSizeValue" min="12" max="42" step="1"></label>
+                    <label data-ushers-only hidden>Palabra PROGRAMACIÓN <span id="ushersProgramLabelFontSizeValue"></span><input type="range" data-design-setting="ushersProgramLabelFontSize" data-output="ushersProgramLabelFontSizeValue" min="22" max="64" step="1"></label>
                     <label>Título programación <span id="programTitleFontSizeValue"></span><input type="range" data-design-setting="programTitleFontSize" data-output="programTitleFontSizeValue" min="10" max="72" step="1"></label>
                     <label>Encabezado tabla <span id="tableHeaderFontSizeValue"></span><input type="range" data-design-setting="tableHeaderFontSize" data-output="tableHeaderFontSizeValue" min="9" max="28" step="1"></label>
                     <label>Contenido tabla <span id="tableBodyFontSizeValue"></span><input type="range" data-design-setting="tableBodyFontSize" data-output="tableBodyFontSizeValue" min="9" max="30" step="1"></label>
