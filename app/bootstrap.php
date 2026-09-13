@@ -250,13 +250,14 @@ function validate_template(mixed $input): array
     if (!is_array($input)) {
         throw new InvalidArgumentException('Plantilla inválida.');
     }
+    $templateType = ($input['templateType'] ?? 'worship') === 'ushers' ? 'ushers' : 'worship';
 
     if (array_key_exists('pages', $input)) {
         if (!is_array($input['pages']) || count($input['pages']) < 1 || count($input['pages']) > 50) {
             throw new InvalidArgumentException('La plantilla debe contener entre 1 y 50 programaciones.');
         }
 
-        $result = ['formatVersion' => 2, 'logo' => '', 'design' => [], 'pages' => []];
+        $result = ['formatVersion' => 2, 'templateType' => $templateType, 'logo' => '', 'design' => [], 'pages' => []];
         foreach (array_values($input['pages']) as $index => $page) {
             if (!is_array($page)) {
                 throw new InvalidArgumentException('Programación inválida.');
@@ -264,15 +265,21 @@ function validate_template(mixed $input): array
             $validated = validate_template(array_merge($page, [
                 'logo' => $index === 0 ? ($input['logo'] ?? '') : '',
                 'design' => $index === 0 ? ($input['design'] ?? []) : [],
+                'templateType' => $templateType,
             ]));
             if ($index === 0) {
                 $result['logo'] = $validated['logo'];
                 $result['design'] = $validated['design'];
             }
-            $rowHeight = max(45, $result['design']['tableBodyFontSize'] * 2.7);
             $logoExtra = max(0, $result['design']['logoSize'] - 104);
-            $available = 1123 - 300 - $logoExtra - $result['design']['footerHeight'] - $result['design']['verseHeight'] - 190;
-            $capacity = max(1, (int) floor($available / $rowHeight));
+            if ($templateType === 'ushers') {
+                $rowHeight = max(40, $result['design']['tableBodyFontSize'] * 2.4);
+                $capacity = max(1, (int) floor((1123 - 265 - $logoExtra) / $rowHeight));
+            } else {
+                $rowHeight = max(45, $result['design']['tableBodyFontSize'] * 2.7);
+                $available = 1123 - 300 - $logoExtra - $result['design']['footerHeight'] - $result['design']['verseHeight'] - 190;
+                $capacity = max(1, (int) floor($available / $rowHeight));
+            }
             if (count($validated['rows']) > $capacity) {
                 throw new InvalidArgumentException('Una programación contiene más filas de las que caben en una hoja A4.');
             }
@@ -287,6 +294,7 @@ function validate_template(mixed $input): array
         'churchName' => 200,
         'congregation' => 120,
         'programTitle' => 250,
+        'period' => 120,
         'verse' => 1200,
         'reference' => 120,
         'coordinatorLabel' => 120,
@@ -326,7 +334,7 @@ function validate_template(mixed $input): array
         'logoSize' => [40, 180, 100],
         'churchNameFontSize' => [12, 42, 23],
         'congregationFontSize' => [12, 42, 22],
-        'programTitleFontSize' => [10, 34, 18],
+        'programTitleFontSize' => [10, 72, 18],
         'tableHeaderFontSize' => [9, 28, 17],
         'tableBodyFontSize' => [9, 30, 17],
         'verseFontSize' => [11, 38, 22],
@@ -356,14 +364,33 @@ function validate_template(mixed $input): array
                 throw new InvalidArgumentException('Una de las fechas es inválida.');
             }
         }
-        $result['rows'][] = [
+        $normalizedRow = [
             'id' => preg_match('/^[a-zA-Z0-9-]{1,80}$/', (string) ($row['id'] ?? '')) ? (string) $row['id'] : bin2hex(random_bytes(8)),
             'date' => $date,
-            'directors' => clean_text($row['directors'] ?? '', 500),
-            'preacher' => clean_text($row['preacher'] ?? '', 500),
-            'special' => ($row['special'] ?? false) === true,
-            'specialText' => clean_text($row['specialText'] ?? '', 500),
         ];
+        if ($templateType === 'ushers') {
+            $uniformMode = in_array($row['uniformMode'] ?? '', ['separate', 'dress'], true) ? $row['uniformMode'] : 'separate';
+            $topType = in_array($row['topType'] ?? '', ['shirt', 'blouse'], true) ? $row['topType'] : 'shirt';
+            $bottomType = in_array($row['bottomType'] ?? '', ['skirt', 'pants'], true) ? $row['bottomType'] : 'skirt';
+            $cleanColor = static fn (mixed $color, string $fallback): string => is_string($color) && preg_match('/^#[0-9a-f]{6}$/i', $color) ? strtolower($color) : $fallback;
+            $normalizedRow += [
+                'names' => clean_text($row['names'] ?? '', 1200),
+                'uniformMode' => $uniformMode,
+                'topType' => $topType,
+                'topColor' => $cleanColor($row['topColor'] ?? '', '#ffffff'),
+                'bottomType' => $bottomType,
+                'bottomColor' => $cleanColor($row['bottomColor'] ?? '', '#9ca3af'),
+                'dressColor' => $cleanColor($row['dressColor'] ?? '', '#f2a7b5'),
+            ];
+        } else {
+            $normalizedRow += [
+                'directors' => clean_text($row['directors'] ?? '', 500),
+                'preacher' => clean_text($row['preacher'] ?? '', 500),
+                'special' => ($row['special'] ?? false) === true,
+                'specialText' => clean_text($row['specialText'] ?? '', 500),
+            ];
+        }
+        $result['rows'][] = $normalizedRow;
     }
 
     return $result;
@@ -372,6 +399,6 @@ function validate_template(mixed $input): array
 function render_configuration_error(string $nonce): never
 {
     http_response_code(503);
-    ?><!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Configuración requerida</title><link rel="stylesheet" href="assets/styles.css"></head><body class="auth-page"><main class="auth-card"><span class="eyebrow">Instalación segura</span><h1>Falta configurar el servidor</h1><p>La aplicación permanece bloqueada para proteger tus datos. Sigue las instrucciones de <code>README.md</code> y coloca <code>programacion-config.php</code> fuera de <code>public_html</code>.</p></main></body></html><?php
+    ?><!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Configuración requerida</title><link rel="stylesheet" href="assets/styles.css"></head><body class="auth-page"><main class="auth-card"><span class="eyebrow">Instalación segura</span><h1>Falta configurar el servidor</h1><p>Completa el instalador de un solo uso para conectar MySQL, generar la clave de cifrado y crear la cuenta administradora.</p><a class="button button-gold auth-submit setup-link" href="setup.php">Iniciar configuración</a></main></body></html><?php
     exit;
 }

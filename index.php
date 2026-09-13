@@ -81,6 +81,38 @@ $defaultState = [
     ],
     'rows' => $dates,
 ];
+
+$ushersDefaultState = [
+    'churchName' => 'IGLESIA EVANGÉLICA INTERAMERICANA ACAIDANA',
+    'congregation' => '',
+    'programTitle' => 'Ujieres',
+    'period' => $months[(int) $today->format('n')] . ' DE ' . $today->format('Y'),
+    'headers' => ['FECHA', 'NOMBRE', 'UNIFORME'],
+    'verse' => '',
+    'reference' => '',
+    'coordinatorLabel' => 'Coordinadores:',
+    'coordinators' => '',
+    'logo' => '',
+    'design' => array_merge($defaultState['design'], [
+        'footerHeight' => 60,
+        'verseHeight' => 120,
+        'churchNameFontSize' => 22,
+        'programTitleFontSize' => 54,
+        'tableHeaderFontSize' => 17,
+        'tableBodyFontSize' => 16,
+    ]),
+    'rows' => array_map(static fn (array $row): array => [
+        'id' => $row['id'],
+        'date' => $row['date'],
+        'names' => '',
+        'uniformMode' => 'separate',
+        'topType' => 'shirt',
+        'topColor' => '#ffffff',
+        'bottomType' => 'skirt',
+        'bottomColor' => '#9ca3af',
+        'dressColor' => '#f2a7b5',
+    ], $dates),
+];
 ?>
 <!doctype html>
 <html lang="es">
@@ -131,6 +163,7 @@ $defaultState = [
                     <button class="panel-primary" type="button" id="saveTemplateButton">Guardar plantilla</button>
                     <button class="panel-secondary" type="button" id="duplicateTemplateButton">Guardar copia</button>
                     <button class="panel-danger" type="button" id="deleteTemplateButton" disabled>Eliminar</button>
+                    <button class="panel-secondary ushers-new-button" type="button" id="newUshersButton">Nueva de ujieres</button>
                 </div>
                 <p class="security-note">El contenido se cifra antes de almacenarse en el servidor.</p>
             </section>
@@ -275,7 +308,7 @@ $defaultState = [
                 <div class="font-controls">
                     <label>Nombre iglesia <span id="churchNameFontSizeValue"></span><input type="range" data-design-setting="churchNameFontSize" data-output="churchNameFontSizeValue" min="12" max="42" step="1"></label>
                     <label>Congregación <span id="congregationFontSizeValue"></span><input type="range" data-design-setting="congregationFontSize" data-output="congregationFontSizeValue" min="12" max="42" step="1"></label>
-                    <label>Título programación <span id="programTitleFontSizeValue"></span><input type="range" data-design-setting="programTitleFontSize" data-output="programTitleFontSizeValue" min="10" max="34" step="1"></label>
+                    <label>Título programación <span id="programTitleFontSizeValue"></span><input type="range" data-design-setting="programTitleFontSize" data-output="programTitleFontSizeValue" min="10" max="72" step="1"></label>
                     <label>Encabezado tabla <span id="tableHeaderFontSizeValue"></span><input type="range" data-design-setting="tableHeaderFontSize" data-output="tableHeaderFontSizeValue" min="9" max="28" step="1"></label>
                     <label>Contenido tabla <span id="tableBodyFontSizeValue"></span><input type="range" data-design-setting="tableBodyFontSize" data-output="tableBodyFontSizeValue" min="9" max="30" step="1"></label>
                     <label>Texto del versículo <span id="verseFontSizeValue"></span><input type="range" data-design-setting="verseFontSize" data-output="verseFontSizeValue" min="11" max="38" step="1"></label>
@@ -289,11 +322,11 @@ $defaultState = [
                 <div class="section-heading">
                     <div>
                         <span class="step-number">07</span>
-                        <h2>Fechas y filas</h2>
+                        <h2 id="rowSectionTitle">Fechas y filas</h2>
                     </div>
                     <button class="icon-button" id="addRowButton" type="button" title="Agregar fecha" aria-label="Agregar fecha">+</button>
                 </div>
-                <p>Activa “Fila especial” para unir Directores y Predicador en esa fecha.</p>
+                <p id="rowSectionHelp">Activa “Fila especial” para unir Directores y Predicador en esa fecha.</p>
                 <div id="rowControls" class="row-controls"></div>
                 <button class="add-row-button" id="addRowButtonBottom" type="button">+ Agregar otra fecha</button>
                 <p class="page-fit-warning" id="pageFitWarning" hidden></p>
@@ -329,10 +362,18 @@ $defaultState = [
                             <b>IEI</b>
                         </div>
                     </div>
-                    <h2 class="editable church-name" contenteditable="true" data-field="churchName" spellcheck="true"></h2>
-                    <div class="editable congregation" contenteditable="true" data-field="congregation" spellcheck="true"></div>
-                    <div class="ornament"><span>◇</span></div>
-                    <div class="editable program-title" contenteditable="true" data-field="programTitle" spellcheck="true"></div>
+                    <div class="standard-heading">
+                        <h2 class="editable church-name" contenteditable="true" data-field="churchName" spellcheck="true"></h2>
+                        <div class="editable congregation" contenteditable="true" data-field="congregation" spellcheck="true"></div>
+                        <div class="ornament"><span>◇</span></div>
+                        <div class="editable program-title" contenteditable="true" data-field="programTitle" spellcheck="true"></div>
+                    </div>
+                    <div class="ushers-heading" hidden>
+                        <h2 class="editable church-name ushers-church-name" contenteditable="true" data-field="churchName" spellcheck="true"></h2>
+                        <div class="ushers-program-label">PROGRAMACIÓN</div>
+                        <div class="editable ushers-program-title" contenteditable="true" data-field="programTitle" spellcheck="true"></div>
+                        <div class="editable ushers-period" contenteditable="true" data-field="period" spellcheck="true"></div>
+                    </div>
                 </header>
 
                 <div class="table-wrap">
@@ -377,6 +418,7 @@ $defaultState = [
 
     <script nonce="<?= htmlspecialchars($nonce, ENT_QUOTES, 'UTF-8') ?>">
         window.DEFAULT_STATE = <?= json_encode($defaultState, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+        window.USHERS_DEFAULT_STATE = <?= json_encode($ushersDefaultState, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
         window.APP_CONFIG = <?= json_encode([
             'storageMode' => $developmentMode ? 'local' : 'server',
             'csrfToken' => $_SESSION['csrf'],

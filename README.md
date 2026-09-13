@@ -4,6 +4,8 @@ Aplicación PHP para crear, guardar, editar, imprimir y exportar a Word document
 
 Cada plantilla puede contener hasta 50 programaciones independientes que comparten el logo y el diseño. La interfaz permite agregarlas, duplicarlas, ordenarlas y eliminarlas; sus títulos, fechas, tabla, versículo y coordinadores se editan por separado.
 
+El botón **Nueva de ujieres** crea un documento con diseño propio y columnas de fecha, nombres y uniforme. Cada uniforme se configura por fila como camisa o blusa con falda o pantalón, o como vestido; los colores seleccionados se aplican directamente a los dibujos SVG mostrados en la hoja y en la impresión, sin escribir el nombre del color.
+
 Cada programación ocupa exactamente una hoja A4. La aplicación limita las filas según el espacio disponible y bloquea el guardado, la impresión o la exportación si alguna programación lo excede. El diseño compartido conserva el fondo central, las imágenes laterales de la cabecera, la marca de agua, el pie, el marco del versículo y sus ajustes de tamaño, opacidad y posición. Las imágenes admitidas son PNG, JPEG y WebP de hasta 2 MB cada una; para marcos y adornos se recomienda PNG con transparencia.
 
 ## Requisitos
@@ -13,31 +15,28 @@ Cada programación ocupa exactamente una hoja A4. La aplicación limita las fila
 - Extensiones PHP `pdo_mysql` y `sodium`.
 - Certificado HTTPS activo.
 
-## Instalación segura en Hostinger
+## Despliegue automático con Git en Hostinger
 
-1. Selecciona PHP 8.2 o superior en hPanel y confirma que estén disponibles `pdo_mysql` y `sodium`.
-2. Crea una base de datos y un usuario de base de datos desde hPanel. Usa una contraseña larga, aleatoria y exclusiva.
-3. Abre phpMyAdmin, selecciona la base de datos e importa `database.sql` una sola vez.
-4. Sube `index.php`, `login.php`, `logout.php`, `api.php`, `.htaccess`, `.user.ini` y las carpetas `app` y `assets` directamente dentro de `public_html`. Verifica que los archivos ocultos `.htaccess` y `.user.ini` también se hayan subido.
-5. Copia el contenido de `config.example.php` a un archivo llamado `programacion-config.php` ubicado **un nivel por encima de `public_html`**. No lo coloques dentro del directorio público. Esta ruta automática presupone que la aplicación está en la raíz de `public_html`; para una subcarpeta define la variable de entorno `PROGRAMACION_CONFIG` con la ruta absoluta.
-6. Completa el DSN, usuario, contraseña de MySQL y `timezone` en ese archivo.
-7. Genera las dos claves desde la terminal de Hostinger o desde un equipo confiable. Nunca uses generadores web:
+La integración Git de Hostinger despliega automáticamente cada cambio enviado a la rama `main`. No es necesario subir ni editar archivos con el administrador de archivos.
 
-```bash
-openssl rand -base64 32
-openssl rand -hex 32
-```
+1. En hPanel selecciona PHP 8.2 o superior y confirma que estén disponibles `pdo_mysql` y `sodium`.
+2. Activa el certificado SSL del dominio. Si usas Cloudflare, selecciona SSL/TLS **Full (strict)**; no uses el modo Flexible.
+3. En hPanel crea una base de datos MySQL y su usuario. Guarda el servidor, nombre, usuario y contraseña que muestra Hostinger. No necesitas abrir phpMyAdmin ni importar `database.sql`.
+4. Entra a **Websites → Dashboard → Advanced → Git** y pulsa **Continue with GitHub**.
+5. Autoriza Hostinger para acceder al repositorio `bryan4k/Programacion_acaidana`.
+6. Selecciona la rama `main`, establece **Root directory** en `public_html` y pulsa **Deploy**. El sitio debe estar vacío o respaldado porque Hostinger reemplazará el contenido del directorio.
+7. Activa **Auto-deployment** para que cada `push` nuevo a `main` se publique automáticamente.
+8. Abre `https://TU-DOMINIO/setup.php` inmediatamente después del primer despliegue.
+9. Completa los datos de MySQL y crea la cuenta administradora. El instalador crea las tablas, genera una clave de cifrado y guarda `programacion-config.php` fuera de `public_html` con permisos privados.
+10. Al terminar entrarás directamente a la aplicación. Desde ese momento `setup.php` queda bloqueado y redirige al inicio de sesión.
 
-8. Coloca el primer resultado en `encryption_keys[1]` y el segundo en `setup_token`.
-9. Comprueba que el dominio abre exclusivamente mediante HTTPS y visita la aplicación. Si usas Cloudflare, selecciona SSL/TLS **Full (strict)**; no uses el modo Flexible.
-10. Como todavía no existen usuarios, aparecerá el formulario para crear la primera cuenta. Usa una contraseña única de al menos 14 caracteres y escribe el `setup_token`.
-11. Después de crear la cuenta, elimina el valor de `setup_token` del archivo de configuración. El alta de cuentas también queda desactivada automáticamente al existir el primer usuario.
+Los futuros despliegues Git solo reemplazan `public_html`. La configuración privada y las claves permanecen un nivel por encima, por lo que no se sobrescriben ni se publican en GitHub.
 
 Activa el firewall o WAF disponible en Hostinger y, si utilizas Cloudflare, habilita su protección contra bots y limita solicitudes repetidas a `login.php`. La aplicación incluye límites propios, pero detener tráfico abusivo antes de ejecutar PHP protege mejor los recursos del hosting compartido.
 
 Antes de poner el sitio en uso, confirma en hPanel que `post_max_size` sea al menos `24M`, que el límite de memoria de PHP sea al menos `128M` y que `max_allowed_packet` de MySQL acepte las plantillas que utilizarás. Los cambios de `.user.ini` pueden tardar varios minutos en aplicarse. Haz una prueba completa guardando una plantilla con varias programaciones e imágenes.
 
-Después de desplegar, comprueba que las rutas `/.htaccess`, `/.user.ini`, `/database.sql`, `/README.md` y `/config.example.php` devuelvan `403` o `404`, nunca su contenido. Revisa los logs de PHP desde hPanel si aparece un error interno.
+Después de desplegar, comprueba que las rutas `/.htaccess`, `/.user.ini`, `/database.sql`, `/README.md`, `/config.example.php` y `/programacion-config.php` devuelvan `403` o `404`, nunca su contenido. Revisa los logs de PHP desde hPanel si aparece un error interno.
 
 Si tienes terminal, protege adicionalmente el archivo privado:
 
