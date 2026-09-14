@@ -17,6 +17,8 @@
     const deleteTemplateButton = document.querySelector('#deleteTemplateButton');
     const pageControls = document.querySelector('#pageControls');
     const printPages = document.querySelector('#printPages');
+    const previewStage = document.querySelector('#previewStage');
+    const workspace = document.querySelector('#workspace');
     let templates = [];
     let activeTemplate = { id: null, version: null };
     let dirty = false;
@@ -125,6 +127,16 @@
     function markDirty() {
         dirty = true;
         setStatus('Cambios sin guardar', 'pending');
+    }
+
+    function updatePreviewScale() {
+        if (getComputedStyle(previewArea).display === 'none') return;
+        const styles = getComputedStyle(previewArea);
+        const availableWidth = previewArea.clientWidth - parseFloat(styles.paddingLeft) - parseFloat(styles.paddingRight);
+        const scale = Math.min(1, Math.max(0.25, availableWidth / 794));
+        previewStage.style.setProperty('--preview-scale', String(scale));
+        previewStage.style.width = `${794 * scale}px`;
+        previewStage.style.height = `${1123 * scale}px`;
     }
 
     function setBusy(value) {
@@ -866,6 +878,19 @@
         if (dirty && !confirm('¿Crear una plantilla de ujieres y descartar los cambios sin guardar?')) return;
         startNewTemplate('ushers');
     });
+    document.querySelector('.mobile-view-switch').addEventListener('click', (event) => {
+        const button = event.target.closest('[data-mobile-view]');
+        if (!button) return;
+        workspace.dataset.mobileView = button.dataset.mobileView;
+        document.querySelectorAll('[data-mobile-view]').forEach((item) => {
+            item.setAttribute('aria-pressed', String(item === button));
+        });
+        requestAnimationFrame(() => {
+            if (button.dataset.mobileView === 'preview') updatePreviewScale();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    });
+    window.addEventListener('resize', updatePreviewScale);
     window.addEventListener('beforeunload', (event) => {
         if (!dirty) return;
         event.preventDefault();
@@ -876,6 +901,7 @@
         placeStaticContent();
         renderRows();
         renderPageControls();
+        updatePreviewScale();
         try {
             await loadTemplateList();
             setStatus(appConfig.storageMode === 'local' ? 'Modo de desarrollo local' : 'Conexión segura');

@@ -146,7 +146,12 @@ $ushersDefaultState = [
         </div>
     </header>
 
-    <main class="workspace">
+    <nav class="mobile-view-switch" aria-label="Vista en dispositivo móvil">
+        <button type="button" data-mobile-view="editor" aria-pressed="true">Editor</button>
+        <button type="button" data-mobile-view="preview" aria-pressed="false">Vista previa</button>
+    </nav>
+
+    <main class="workspace" id="workspace" data-mobile-view="editor">
         <aside class="editor-panel" aria-label="Controles de edición">
             <section class="panel-section panel-stack template-manager">
                 <div class="section-heading">
@@ -343,7 +348,8 @@ $ushersDefaultState = [
 
         <section class="preview-area" id="previewArea" aria-label="Vista previa del documento">
             <div class="preview-label"><span></span> Vista previa A4</div>
-            <article class="program-sheet" id="programSheet">
+            <div class="preview-sheet-stage" id="previewStage">
+                <article class="program-sheet" id="programSheet">
                 <img class="custom-header-image" id="headerDecorationImage" alt="" hidden>
                 <img class="custom-header-side custom-header-left" id="headerLeftImage" alt="" hidden>
                 <img class="custom-header-side custom-header-right" id="headerRightImage" alt="" hidden>
@@ -405,7 +411,8 @@ $ushersDefaultState = [
                     <div class="editable coordinators" contenteditable="true" data-field="coordinators" spellcheck="true"></div>
                 </footer>
 
-            </article>
+                </article>
+            </div>
             <div class="print-pages" id="printPages" aria-hidden="true"></div>
         </section>
     </main>
