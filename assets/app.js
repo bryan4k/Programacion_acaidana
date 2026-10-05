@@ -4,8 +4,6 @@
     const LEGACY_STORAGE_KEY = 'programacion-cultos-v1';
     const LOCAL_TEMPLATES_KEY = 'programacion-cultos-templates-v2';
     const appConfig = window.APP_CONFIG;
-    const spanishDays = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-    const spanishMonths = ['Ene.', 'Feb.', 'Mar.', 'Abr.', 'May.', 'Jun.', 'Jul.', 'Ago.', 'Sept.', 'Oct.', 'Nov.', 'Dic.'];
     const sheet = document.querySelector('#programSheet');
     const previewArea = document.querySelector('#previewArea');
     const rowsContainer = document.querySelector('#programRows');
@@ -110,9 +108,7 @@
             const [year, month, day] = value.split('-');
             return year && month && day ? `${day}/${month}/${year}` : value;
         }
-        const date = new Date(`${value}T12:00:00`);
-        if (Number.isNaN(date.getTime())) return value;
-        return `${spanishDays[date.getDay()]} ${String(date.getDate()).padStart(2, '0')} ${spanishMonths[date.getMonth()]}`;
+        return window.ProgramDates.formatProgramDates(value)[0] || '';
     }
 
     function makeId() {
@@ -440,7 +436,14 @@
         const tableRow = fragment.querySelector('tr');
         tableRow.dataset.rowId = row.id;
         tableRow.classList.toggle('is-special', row.special);
-        fragment.querySelector('.print-date').textContent = formatDate(row.date);
+        const dateCell = fragment.querySelector('.date-cell');
+        dateCell.replaceChildren();
+        window.ProgramDates.formatProgramDates(row.date, row.secondDate).forEach((date) => {
+            const line = document.createElement('span');
+            line.className = 'print-date';
+            line.textContent = date;
+            dateCell.append(line);
+        });
         fragment.querySelectorAll('[data-row-field]').forEach((editor) => {
             editor.textContent = row[editor.dataset.rowField] || '';
         });
@@ -570,12 +573,14 @@
                 control.querySelector('.separate-uniform-fields').hidden = row.uniformMode === 'dress';
                 control.querySelector('.dress-uniform-field').hidden = row.uniformMode !== 'dress';
             } else {
-                control.innerHTML = '<div class="row-control-top"><input type="date"><button type="button" class="remove-row" title="Eliminar fila" aria-label="Eliminar fila">×</button></div><label class="special-toggle"><input type="checkbox"><span>Fila especial (unir 2 columnas)</span></label>';
+                control.innerHTML = '<div class="row-control-top"><input type="date" data-date-field="date"><button type="button" class="remove-row" title="Eliminar fila" aria-label="Eliminar fila">×</button></div><label class="second-date-control">Segunda fecha (opcional)<input type="date" data-date-field="secondDate"></label><label class="special-toggle"><input type="checkbox"><span>Fila especial (unir 2 columnas)</span></label>';
                 control.querySelector('input[type="checkbox"]').checked = Boolean(row.special);
             }
-            const dateInput = control.querySelector('input[type="date"]');
-            dateInput.value = row.date || '';
-            dateInput.setAttribute('aria-label', `Fecha de la fila ${index + 1}`);
+            control.querySelectorAll('input[type="date"]').forEach((dateInput) => {
+                const field = dateInput.dataset.dateField || 'date';
+                dateInput.value = row[field] || '';
+                dateInput.setAttribute('aria-label', field === 'date' ? `Fecha de la fila ${index + 1}` : `Segunda fecha de la fila ${index + 1}`);
+            });
             controlsContainer.append(control);
         });
 
@@ -603,7 +608,7 @@
         }
         state.rows.push(documentState.templateType === 'ushers'
             ? { id: makeId(), date, names: '', uniformMode: 'separate', topType: 'shirt', topColor: '#ffffff', bottomType: 'skirt', bottomColor: '#9ca3af', dressColor: '#f2a7b5' }
-            : { id: makeId(), date, directors: '', preacher: '', special: false, specialText: 'Culto especial' });
+            : { id: makeId(), date, secondDate: '', directors: '', preacher: '', special: false, specialText: 'Culto especial' });
         renderRows();
         markDirty();
         controlsContainer.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -770,7 +775,7 @@
         const control = event.target.closest('.row-control');
         const row = state.rows.find((item) => item.id === control?.dataset.rowId);
         if (!row) return;
-        if (event.target.matches('input[type="date"]')) row.date = event.target.value;
+        if (event.target.matches('input[type="date"]')) row[event.target.dataset.dateField || 'date'] = event.target.value;
         if (event.target.matches('input[type="checkbox"]')) row.special = event.target.checked;
         const uniformField = event.target.closest('[data-uniform-field]');
         if (uniformField) row[uniformField.dataset.uniformField] = uniformField.value;

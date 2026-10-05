@@ -134,6 +134,7 @@ select { font: inherit; }
 .row-control { padding: 10px; border: 1px solid #dedbd2; border-radius: 8px; background: #fff; }
 .row-control-top { display: flex; align-items: center; gap: 7px; }
 .row-control input[type="date"] { min-width: 0; flex: 1; border: 1px solid #ccd2da; border-radius: 5px; padding: 6px; color: var(--navy); font-size: 11px; }
+.second-date-control { display: grid; gap: 4px; margin-top: 8px; color: #4d5967; font-size: 11px; }
 .remove-row { border: 0; color: #9c4b43; background: none; font-size: 18px; line-height: 1; }
 .special-toggle { display: flex; align-items: center; gap: 7px; margin-top: 8px; color: #4d5967; font-size: 11px; cursor: pointer; }
 .special-toggle input { accent-color: var(--navy); }
@@ -270,6 +271,7 @@ select { font: inherit; }
 .program-table th + th { border-left: 1px solid var(--gold); }
 .program-table td { height: 45px; padding: 4px 9px; border-right: 1px solid var(--gold); border-bottom: 1px solid var(--gold); background: rgb(255 255 255 / 65%); vertical-align: middle; }
 .program-table td:first-child { width: 33.333%; border-left: 1px solid var(--gold); }
+.program-table .print-date { display: block; }
 .program-table tbody tr:last-child td:first-child { border-radius: 0 0 0 11px; }
 .program-table tbody tr:last-child td:last-child { border-radius: 0 0 11px; }
 .cell-editor { min-height: 1.3em; outline: none; white-space: pre-line; }
