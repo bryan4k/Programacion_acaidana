@@ -416,7 +416,6 @@
 
         document.querySelector('#defaultHeaderLeft').hidden = Boolean(design.headerLeftImage);
         document.querySelector('#defaultHeaderRight').hidden = Boolean(design.headerRightImage);
-        document.querySelector('#defaultFooter').hidden = Boolean(design.footerImage);
         document.querySelector('.verse-card').classList.toggle('has-custom-frame', Boolean(design.verseFrameImage));
 
         const numeric = (field) => Number(design[field]);
@@ -492,9 +491,20 @@
         const selectors = {
             logo: ['#logoWrap'],
             watermark: ['#customWatermarkImage'],
-            footer: ['#customFooterImage', '#defaultFooter', '.sheet-footer'],
             verse: ['.verse-card'],
         };
+        const footerHidden = documentState.templateType === 'ushers' || !visibility.footer;
+        const footerVisibility = ImageReplacement.footerDecorationVisibility(
+            !footerHidden,
+            Boolean(state.design.footerImage),
+        );
+        sheet.querySelectorAll('#customFooterImage').forEach((element) => {
+            element.hidden = footerVisibility.customImageHidden;
+        });
+        sheet.querySelectorAll('#defaultFooter').forEach((element) => {
+            element.hidden = footerVisibility.defaultArtworkHidden;
+        });
+
         Object.entries(selectors).forEach(([key, targets]) => {
             const hidden = !visibility[key]
                 || (documentState.templateType === 'ushers' && ['footer', 'verse'].includes(key));

@@ -6,7 +6,7 @@ const fs = require('node:fs');
 const { formatProgramDates } = require('../assets/date-rows.js');
 const { rowCapacity, isWithinA4OverflowTolerance, availableVerseHeight } = require('../assets/a4-layout.js');
 const { normalizeDecorationVisibility } = require('../assets/decor-visibility.js');
-const { shouldShowDefaultArtwork, isCurrentImageRead, imageReplacementVisibility } = require('../assets/image-replacement.js');
+const { shouldShowDefaultArtwork, isCurrentImageRead, imageReplacementVisibility, footerDecorationVisibility } = require('../assets/image-replacement.js');
 
 test('formats two program dates as separate non-empty lines', () => {
     assert.deepEqual(formatProgramDates('2026-10-01', '2026-10-08'), ['Jueves 01 Oct.', 'Jueves 08 Oct.']);
@@ -58,6 +58,29 @@ test('keeps a custom replacement visible while hiding its fallback artwork', () 
     assert.deepEqual(imageReplacementVisibility(false, true), {
         customImageHidden: true,
         defaultArtworkHidden: true,
+    });
+});
+
+test('footer decoration visibility never hides coordinator content and replaces default artwork', () => {
+    assert.deepEqual(footerDecorationVisibility(true, true), {
+        customImageHidden: false,
+        defaultArtworkHidden: true,
+        footerContentHidden: false,
+    });
+    assert.deepEqual(footerDecorationVisibility(true, false), {
+        customImageHidden: true,
+        defaultArtworkHidden: false,
+        footerContentHidden: false,
+    });
+    assert.deepEqual(footerDecorationVisibility(false, true), {
+        customImageHidden: true,
+        defaultArtworkHidden: true,
+        footerContentHidden: false,
+    });
+    assert.deepEqual(footerDecorationVisibility(false, false), {
+        customImageHidden: true,
+        defaultArtworkHidden: true,
+        footerContentHidden: false,
     });
 });
 
