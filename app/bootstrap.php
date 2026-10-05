@@ -397,6 +397,14 @@ function validate_template(mixed $input): array
                 'dressColor' => $cleanColor($row['dressColor'] ?? '', '#f2a7b5'),
             ];
         } else {
+            $secondDate = clean_text($row['secondDate'] ?? '', 10);
+            if ($secondDate !== '') {
+                $secondDateObject = DateTimeImmutable::createFromFormat('!Y-m-d', $secondDate);
+                if (!$secondDateObject || $secondDateObject->format('Y-m-d') !== $secondDate) {
+                    throw new InvalidArgumentException('Una de las fechas es inválida.');
+                }
+                $normalizedRow['secondDate'] = $secondDate;
+            }
             $normalizedRow += [
                 'directors' => clean_text($row['directors'] ?? '', 500),
                 'preacher' => clean_text($row['preacher'] ?? '', 500),
