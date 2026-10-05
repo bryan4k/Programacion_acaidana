@@ -258,6 +258,18 @@ function clean_image(mixed $value): string
     return $image;
 }
 
+function template_row_capacity(array $design, string $templateType): int
+{
+    $logoExtra = max(0, $design['logoSize'] - 104);
+    if ($templateType === 'ushers') {
+        $rowHeight = max(40, $design['tableBodyFontSize'] * 2.4);
+        return max(1, (int) floor((1123 - 265 - $logoExtra) / $rowHeight));
+    }
+    $rowHeight = max(45, $design['tableBodyFontSize'] * 2.7);
+    $available = 1123 - 300 - $logoExtra - $design['footerHeight'] - $design['verseHeight'] - 190;
+    return max(1, (int) floor(($available + 37.8) / $rowHeight));
+}
+
 function validate_template(mixed $input): array
 {
     if (!is_array($input)) {
@@ -284,15 +296,7 @@ function validate_template(mixed $input): array
                 $result['logo'] = $validated['logo'];
                 $result['design'] = $validated['design'];
             }
-            $logoExtra = max(0, $result['design']['logoSize'] - 104);
-            if ($templateType === 'ushers') {
-                $rowHeight = max(40, $result['design']['tableBodyFontSize'] * 2.4);
-                $capacity = max(1, (int) floor((1123 - 265 - $logoExtra) / $rowHeight));
-            } else {
-                $rowHeight = max(45, $result['design']['tableBodyFontSize'] * 2.7);
-                $available = 1123 - 300 - $logoExtra - $result['design']['footerHeight'] - $result['design']['verseHeight'] - 190;
-                $capacity = max(1, (int) floor($available / $rowHeight));
-            }
+            $capacity = template_row_capacity($result['design'], $templateType);
             if (count($validated['rows']) > $capacity) {
                 throw new InvalidArgumentException('Una programación contiene más filas de las que caben en una hoja A4.');
             }
@@ -413,6 +417,11 @@ function validate_template(mixed $input): array
             ];
         }
         $result['rows'][] = $normalizedRow;
+    }
+
+    $capacity = template_row_capacity($result['design'], $templateType);
+    if (count($result['rows']) > $capacity) {
+        throw new InvalidArgumentException('Una programación contiene más filas de las que caben en una hoja A4.');
     }
 
     return $result;

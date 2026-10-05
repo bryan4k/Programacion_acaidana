@@ -23,6 +23,7 @@
     let busy = false;
 
     const clone = (value) => JSON.parse(JSON.stringify(value));
+    const { rowCapacity, isWithinA4OverflowTolerance } = window.A4Layout;
 
     function normalizePage(value, templateType = 'worship') {
         const defaults = clone(templateType === 'ushers' ? window.USHERS_DEFAULT_STATE : window.DEFAULT_STATE);
@@ -545,14 +546,7 @@
     }
 
     function pageCapacity() {
-        const design = state.design;
-        const rowHeight = Math.max(45, Number(design.tableBodyFontSize) * 2.7);
-        const logoExtra = Math.max(0, Number(design.logoSize) - 104);
-        if (documentState.templateType === 'ushers') {
-            return Math.max(1, Math.floor((1123 - 265 - logoExtra) / Math.max(40, Number(design.tableBodyFontSize) * 2.4)));
-        }
-        const available = 1123 - 300 - logoExtra - Number(design.footerHeight) - Number(design.verseHeight) - 190;
-        return Math.max(1, Math.floor(available / rowHeight));
+        return rowCapacity(state.design, documentState.templateType);
     }
 
     function renderRows() {
@@ -682,7 +676,7 @@
         if (documentState.pages.some((page) => page.rows.length > capacity)) return false;
         buildPrintPages();
         printPages.classList.add('is-measuring');
-        const fits = Array.from(printPages.querySelectorAll('.program-sheet')).every((page) => page.scrollHeight <= page.clientHeight);
+        const fits = Array.from(printPages.querySelectorAll('.program-sheet')).every((page) => isWithinA4OverflowTolerance(page.clientHeight, page.scrollHeight, documentState.templateType));
         printPages.classList.remove('is-measuring');
         return fits;
     }
