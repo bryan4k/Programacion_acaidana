@@ -7,7 +7,7 @@ Validate content against the physical A4 sheet boundary rather than internal mar
 The original row-capacity estimate subtracted reserved internal space for decorations and header lead-in, so it could block a layout even while all information remained inside the physical sheet. Decorative sizing must not change estimated row capacity; the browser's measured physical A4 edge remains the hard content boundary. Uploaded images can be removed, but built-in decorations reappear or remain visible, and cannot be hidden as elements.
 
 ## Scope
-- Replace margin/decoration-based overflow blocking with a physical A4-bound check shared by save, print, and Word-export flows; keep blocking when information crosses the outer sheet edge.
+- Preserve physical A4-bound checks for print and Word-export flows; saving content beyond a page estimate or physical output boundary remains allowed.
 - Preserve fixed A4 dimensions and never allow the main program table to be hidden or deleted.
 - Add independent, persistent hide/restore controls for the built-in decorative elements: logo/emblem, header ornaments/backgrounds, watermark, footer, and verse frame/card.
 - Keep older saved templates compatible, with decorations visible by default when no visibility settings exist.
@@ -23,7 +23,7 @@ The original row-capacity estimate subtracted reserved internal space for decora
 
 ## Acceptance Criteria
 - [x] Decorative sizing or internal margins do not block saving when all information remains within the outer A4 bounds.
-- [x] Information crossing the physical A4 boundary continues to block save/export/print; printed sheet remains 210 × 297 mm.
+- [x] Information crossing the physical A4 boundary continues to block print/Word export; printed sheet remains 210 × 297 mm.
 - [x] Each named non-table decoration can be hidden and restored independently; its visibility persists after save/reload.
 - [x] The main program table cannot be hidden or deleted.
 - [x] Legacy templates without visibility settings still render all decorations by default.
@@ -44,6 +44,7 @@ The original row-capacity estimate subtracted reserved internal space for decora
 - [x] A4-BND-2: Followed the clarified rule that decorative logo size cannot lower usher row capacity. RED: Node failed (large logo produced 19 rows vs. 21), and PHP rejected a 21-row usher page with a 180px logo. Removed logo-size reserve from client/server usher estimates while retaining the fixed header reserve. GREEN: Node 6/6, PHP validation, PHP syntax, JS syntax, and diff checks passed; 22 rows remain blocked by the estimated A4 edge. Commit `c8d1c86`; RDD assessment medium, `review_due=false` (`under_budget`).
 - [x] A4-BND-3: Decoupled decorative header/footer artwork dimensions from sheet content room. Removed footer-image height from `.program-sheet` bottom padding and verse-height availability; actual coordinator content height remains accounted for, and the fixed real-content lead-in / hard physical A4 overflow guard remain unchanged. RED: Node 12 passed, 1 failed on injected padding. GREEN: Node 13/13, PHP validation passed, PHP syntax checks passed, JS syntax checks passed, diff check passed. Browser smoke not run (no safe running local app confirmed). Behavior+tests commit `8fe2ca7`; RDD review remains parent-owned.
 - [x] A4-BND-4: Removed the remaining fixed 300px worship and 265px usher lead-in reserves from client and PHP row-capacity estimates; estimates now use the full 1123px A4 height with existing row-height formulas unchanged. RED: Node 12/14 passed, 2 failed on worship/usher capacities (17 vs 24; 21 vs 27); PHP validation rejected the 24-row worship case under the old fixed reserve. GREEN: Node 14/14, PHP validation passed, PHP syntax checks passed, JS syntax checks passed, and diff check passed. The measured client physical edge guard remains and regression verifies `allPagesFit()` uses `scrollHeight <= clientHeight` via the A4 helper. Browser smoke not run (no safe running local app confirmed). Commit `3a233ab`; no remote or review actions taken.
+- [x] A4-BND-5: Removed row-capacity blocking from add-row controls, `saveTemplate()`, and PHP template validation (including multipage documents); removed the inline page-fit warning/state. Users can edit and save content beyond the A4 estimate, subject to the existing 300-row input safety bound. Print and Word export still call `allPagesFit()` and retain the physical fit guard; fixed A4 dimensions and the verse-height boundary are unchanged. RED: Node test failed because saving still called `allPagesFit()`; PHP rejected rows 25/28 and multipage 25 against the fit estimate. GREEN: Node 15/15 and PHP validation passed, both PHP syntax checks passed, JS syntax check passed, and diff check passed. Browser smoke not run (no safe local preview confirmed). Commit `8e12de9`.
 
 ## Next Step
 Parent to review committed work. Do not push or update the open PR. The browser smoke left a temporary `A4 decoration smoke` template in local development browser storage; permanent deletion confirmation was not accepted, so request user authorization before cleanup.
