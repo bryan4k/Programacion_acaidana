@@ -424,17 +424,47 @@
         const visibility = normalizeDecorationVisibility(state.design.visibility);
         state.design.visibility = visibility;
         sheet.classList.toggle('hide-watermark', !visibility.watermark);
+        const imageReplacements = {
+            headerLeft: {
+                custom: '#headerLeftImage',
+                default: '#defaultHeaderLeft',
+                image: state.design.headerLeftImage,
+            },
+            headerRight: {
+                custom: '#headerRightImage',
+                default: '#defaultHeaderRight',
+                image: state.design.headerRightImage,
+            },
+            headerCenter: {
+                custom: '#headerDecorationImage',
+                default: '.standard-heading .ornament',
+                image: state.design.headerImage,
+            },
+        };
+        Object.entries(imageReplacements).forEach(([key, replacement]) => {
+            const visibilityState = ImageReplacement.imageReplacementVisibility(
+                visibility[key],
+                Boolean(replacement.image),
+            );
+            sheet.querySelectorAll(replacement.custom).forEach((element) => {
+                element.hidden = visibilityState.customImageHidden;
+            });
+            sheet.querySelectorAll(replacement.default).forEach((element) => {
+                const replacedByWatermark = ['headerLeft', 'headerRight'].includes(key)
+                    && !ImageReplacement.shouldShowDefaultArtwork(state.design.watermarkImage);
+                element.hidden = visibilityState.defaultArtworkHidden || replacedByWatermark;
+            });
+        });
+
         const selectors = {
             logo: ['#logoWrap'],
-            headerLeft: ['#headerLeftImage', '#defaultHeaderLeft'],
-            headerRight: ['#headerRightImage', '#defaultHeaderRight'],
-            headerCenter: ['#headerDecorationImage', '.standard-heading .ornament'],
             watermark: ['#customWatermarkImage'],
             footer: ['#customFooterImage', '#defaultFooter', '.sheet-footer'],
             verse: ['.verse-card'],
         };
         Object.entries(selectors).forEach(([key, targets]) => {
-            const hidden = !visibility[key] || (documentState.templateType === 'ushers' && ['footer', 'verse'].includes(key));
+            const hidden = !visibility[key]
+                || (documentState.templateType === 'ushers' && ['footer', 'verse'].includes(key));
             targets.forEach((selector) => sheet.querySelectorAll(selector).forEach((element) => { element.hidden = hidden; }));
             const button = document.querySelector(`[data-toggle-decoration="${key}"]`);
             if (button) {
@@ -446,6 +476,8 @@
     }
 
     function readDesignImage(input) {
+        const readVersion = Number(input.dataset.readVersion || 0) + 1;
+        input.dataset.readVersion = String(readVersion);
         const [file] = input.files;
         if (!file) return;
         if (file.size > 2 * 1024 * 1024 || !['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
@@ -455,6 +487,7 @@
         }
         const reader = new FileReader();
         reader.addEventListener('load', () => {
+            if (!ImageReplacement.isCurrentImageRead(readVersion, Number(input.dataset.readVersion))) return;
             state.design[input.dataset.designImage] = reader.result;
             updateDesign();
             renderRows();
@@ -823,6 +856,9 @@
     });
 
     document.querySelector('#logoInput').addEventListener('change', (event) => {
+        const input = event.target;
+        const readVersion = Number(input.dataset.readVersion || 0) + 1;
+        input.dataset.readVersion = String(readVersion);
         const [file] = event.target.files;
         if (!file) return;
         if (file.size > 2 * 1024 * 1024 || !['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
@@ -832,6 +868,7 @@
         }
         const reader = new FileReader();
         reader.addEventListener('load', () => {
+            if (!ImageReplacement.isCurrentImageRead(readVersion, Number(input.dataset.readVersion))) return;
             documentState.logo = reader.result;
             state.logo = documentState.logo;
             updateLogo();
@@ -841,9 +878,11 @@
     });
 
     document.querySelector('#removeLogoButton').addEventListener('click', () => {
+        const input = document.querySelector('#logoInput');
+        input.dataset.readVersion = String(Number(input.dataset.readVersion || 0) + 1);
         documentState.logo = '';
         state.logo = documentState.logo;
-        document.querySelector('#logoInput').value = '';
+        input.value = '';
         updateLogo();
         markDirty();
     });

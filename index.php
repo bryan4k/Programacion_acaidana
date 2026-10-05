@@ -444,6 +444,7 @@ $ushersDefaultState = [
     <script src="<?= htmlspecialchars(asset_url('assets/date-rows.js'), ENT_QUOTES, 'UTF-8') ?>"></script>
     <script src="<?= htmlspecialchars(asset_url('assets/a4-layout.js'), ENT_QUOTES, 'UTF-8') ?>"></script>
     <script src="<?= htmlspecialchars(asset_url('assets/decor-visibility.js'), ENT_QUOTES, 'UTF-8') ?>"></script>
+    <script src="<?= htmlspecialchars(asset_url('assets/image-replacement.js'), ENT_QUOTES, 'UTF-8') ?>"></script>
     <script src="<?= htmlspecialchars(asset_url('assets/app.js'), ENT_QUOTES, 'UTF-8') ?>"></script>
 </body>
 </html>

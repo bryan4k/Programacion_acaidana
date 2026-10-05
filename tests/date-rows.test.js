@@ -5,6 +5,7 @@ const assert = require('node:assert/strict');
 const { formatProgramDates } = require('../assets/date-rows.js');
 const { rowCapacity, isWithinA4OverflowTolerance } = require('../assets/a4-layout.js');
 const { normalizeDecorationVisibility } = require('../assets/decor-visibility.js');
+const { shouldShowDefaultArtwork, isCurrentImageRead, imageReplacementVisibility } = require('../assets/image-replacement.js');
 
 test('formats two program dates as separate non-empty lines', () => {
     assert.deepEqual(formatProgramDates('2026-10-01', '2026-10-08'), ['Jueves 01 Oct.', 'Jueves 08 Oct.']);
@@ -42,4 +43,24 @@ test('defaults legacy decorations to visible and persists independent hide setti
         watermark: true, footer: false, verse: true,
     });
     assert.equal(Object.hasOwn(normalizeDecorationVisibility(), 'programTable'), false);
+});
+
+test('keeps a custom replacement visible while hiding its fallback artwork', () => {
+    assert.deepEqual(imageReplacementVisibility(true, true), {
+        customImageHidden: false,
+        defaultArtworkHidden: true,
+    });
+    assert.deepEqual(imageReplacementVisibility(true, false), {
+        customImageHidden: true,
+        defaultArtworkHidden: false,
+    });
+    assert.deepEqual(imageReplacementVisibility(false, true), {
+        customImageHidden: true,
+        defaultArtworkHidden: true,
+    });
+});
+
+test('ignores image reads that complete after a newer selection', () => {
+    assert.equal(isCurrentImageRead(1, 2), false);
+    assert.equal(isCurrentImageRead(2, 2), true);
 });
