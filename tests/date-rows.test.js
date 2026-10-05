@@ -23,15 +23,60 @@ test('uses the physical A4 edge as the only overflow boundary', () => {
 });
 
 test('does not subtract decoration sizes or internal footer and verse reserves from A4 row capacity', () => {
-    const design = { tableBodyFontSize: 17, logoSize: 104, footerHeight: 310, verseHeight: 170 };
-    assert.equal(rowCapacity(design, 'worship'), 17);
+    const design = { tableBodyFontSize: 17, logoSize: 104, headerHeight: 600, footerHeight: 600, verseHeight: 170 };
+    assert.equal(rowCapacity(design, 'worship'), Math.floor(1123 / (17 * 2.7)));
+    assert.equal(rowCapacity({ ...design, headerHeight: 90, footerHeight: 80 }, 'worship'), rowCapacity(design, 'worship'));
 });
 
-test('does not reduce usher row capacity for a large decorative logo', () => {
-    const baseDesign = { tableBodyFontSize: 17, logoSize: 104, footerHeight: 150, verseHeight: 170 };
-    const largeLogoDesign = { ...baseDesign, logoSize: 180 };
-    assert.equal(rowCapacity(baseDesign, 'ushers'), 21);
-    assert.equal(rowCapacity(largeLogoDesign, 'ushers'), 21);
+test('uses the full physical A4 height for ushers regardless of header and footer art sizes', () => {
+    const baseDesign = { tableBodyFontSize: 17, logoSize: 104, headerHeight: 80, footerHeight: 90, verseHeight: 170 };
+    const largeDecorations = { ...baseDesign, headerHeight: 600, footerHeight: 600, logoSize: 300 };
+    assert.equal(rowCapacity(baseDesign, 'ushers'), Math.floor(1123 / (17 * 2.4)));
+    assert.equal(rowCapacity(largeDecorations, 'ushers'), rowCapacity(baseDesign, 'ushers'));
+});
+
+test('measured page overflow still fails at the physical A4 edge', () => {
+    assert.equal(isWithinA4OverflowTolerance(1123, 1123), true);
+    assert.equal(isWithinA4OverflowTolerance(1123, 1124), false);
+    const app = fs.readFileSync(require.resolve('../assets/app.js'), 'utf8');
+    assert.match(app, /function allPagesFit\(\)[\s\S]*?isWithinA4OverflowTolerance\(page\.clientHeight, page\.scrollHeight/);
+});
+
+test('allows adding and saving over-capacity rows while Word export keeps the fit guard', () => {
+    const app = fs.readFileSync(require.resolve('../assets/app.js'), 'utf8');
+    const index = fs.readFileSync(require.resolve('../index.php'), 'utf8');
+    const saveTemplate = app.match(/async function saveTemplate\(asCopy = false\) \{([\s\S]*?)\n    function /)?.[1] || '';
+    const addRow = app.match(/function addRow\(\) \{([\s\S]*?)\n    function /)?.[1] || '';
+    const renderRows = app.match(/function renderRows\(\) \{([\s\S]*?)\n    function /)?.[1] || '';
+    assert.ok(saveTemplate);
+    assert.ok(addRow);
+    assert.ok(renderRows);
+    assert.doesNotMatch(saveTemplate, /allPagesFit\(\)/);
+    assert.doesNotMatch(addRow, /state\.rows\.length\s*>=|pageCapacity\(\)/);
+    assert.doesNotMatch(renderRows, /pageFitWarning|pageCapacity\(\)|addRowButton[^\n]*disabled/);
+    assert.doesNotMatch(app, /pageFitWarning/);
+    assert.doesNotMatch(index, /pageFitWarning|page-fit-warning/);
+    assert.match(app, /function exportWord\(\)[\s\S]*?if \(!allPagesFit\(\)\)/);
+    const printAction = app.match(/document\.querySelector\('#printButton'\)\.addEventListener\('click', \(\) => \{([\s\S]*?)\n    \}\);/)?.[1] || '';
+    assert.ok(printAction);
+    assert.doesNotMatch(printAction, /allPagesFit\(\)|alert\(/);
+    assert.match(printAction, /buildPrintPages\(\)[\s\S]*window\.print\(\)/);
+});
+
+test('print media restores preview area hidden by the mobile editor selector', () => {
+    const css = fs.readFileSync(require.resolve('../assets/styles.css'), 'utf8');
+    const printRules = css.match(/@media print\s*\{([\s\S]*?)\n\}/)?.[1] || '';
+    assert.match(printRules, /#previewArea\s*\{[^}]*display:\s*block/);
+});
+
+test('does not show a preview overflow state from internal scroll measurements', () => {
+    const app = fs.readFileSync(require.resolve('../assets/app.js'), 'utf8');
+    const css = fs.readFileSync(require.resolve('../assets/styles.css'), 'utf8');
+    const verseLimit = app.match(/function updateVerseHeightLimit\(\) \{([\s\S]*?)\n    function updateDesign/)?.[1] || '';
+    assert.ok(verseLimit);
+    assert.doesNotMatch(verseLimit, /scrollHeight|classList\.toggle\('page-overflow'/);
+    assert.doesNotMatch(app, /page-overflow/);
+    assert.doesNotMatch(css, /\.program-sheet\.page-overflow/);
 });
 
 test('defaults legacy decorations to visible and persists independent hide settings without a table toggle', () => {

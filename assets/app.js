@@ -212,10 +212,6 @@
 
     async function saveTemplate(asCopy = false) {
         if (busy) return;
-        if (!allPagesFit()) {
-            alert('Una de las programaciones no cabe en una hoja A4. Corrige las filas o tamaños antes de guardar.');
-            return;
-        }
         const name = templateName.value.trim();
         if (!name) {
             templateName.focus();
@@ -380,16 +376,6 @@
         state.design.verseHeight = Math.min(maximum, Math.max(minimum, Number(state.design.verseHeight) || minimum));
         input.value = String(state.design.verseHeight);
         document.querySelector('#verseHeightValue').textContent = `${state.design.verseHeight} px`;
-        const overflow = sheet.scrollHeight > sheet.clientHeight;
-        sheet.classList.toggle('page-overflow', overflow);
-        const warning = document.querySelector('#pageFitWarning');
-        if (warning) {
-            const rowsExceed = state.rows.length > pageCapacity();
-            warning.hidden = !overflow && !rowsExceed;
-            warning.textContent = overflow
-                ? 'El contenido excede el espacio disponible en la hoja A4. Reduce el texto o los tamaños antes de guardar.'
-                : rowsExceed ? `Esta programación tiene ${state.rows.length} filas y solo caben ${pageCapacity()}. Elimina filas o reduce los tamaños antes de guardar.` : '';
-        }
     }
 
     function updateDesign() {
@@ -684,22 +670,10 @@
             controlsContainer.append(control);
         });
 
-        const capacity = pageCapacity();
-        const warning = document.querySelector('#pageFitWarning');
-        const exceeds = state.rows.length > capacity;
-        warning.hidden = !exceeds;
-        warning.textContent = exceeds ? `Esta programación tiene ${state.rows.length} filas y solo caben ${capacity}. Elimina filas o reduce los tamaños antes de guardar.` : '';
-        sheet.classList.toggle('page-overflow', exceeds);
-        document.querySelector('#addRowButton').disabled = state.rows.length >= capacity;
-        document.querySelector('#addRowButtonBottom').disabled = state.rows.length >= capacity;
         updateVerseHeightLimit();
     }
 
     function addRow() {
-        if (state.rows.length >= pageCapacity()) {
-            alert('Esta hoja A4 ya está completa. Agrega otra programación para continuar.');
-            return;
-        }
         const previous = state.rows[state.rows.length - 1];
         let date = '';
         if (previous?.date) {
@@ -791,7 +765,6 @@
     function buildPageElement(pageData) {
         const page = sheet.cloneNode(true);
         page.removeAttribute('id');
-        page.classList.remove('page-overflow');
         page.querySelectorAll('[data-field]').forEach((element) => {
             element.textContent = pageData[element.dataset.field] || '';
         });
@@ -972,10 +945,6 @@
     document.querySelector('#movePageDownButton').addEventListener('click', () => moveProgramPage(1));
     document.querySelector('#deletePageButton').addEventListener('click', deleteProgramPage);
     document.querySelector('#printButton').addEventListener('click', () => {
-        if (!allPagesFit()) {
-            alert('Una de las programaciones no cabe en una hoja A4. Corrige las filas o tamaños antes de imprimir.');
-            return;
-        }
         buildPrintPages();
         window.print();
     });

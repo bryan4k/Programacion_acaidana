@@ -94,7 +94,6 @@ select { font: inherit; }
 .page-actions button { min-height: 32px; border: 1px solid #b7c0cb; border-radius: 5px; color: var(--navy); background: #fff; font-size: 10px; font-weight: 700; }
 .page-actions #deletePageButton { color: #923f38; }
 .page-actions button:disabled, .add-row-button:disabled, .icon-button:disabled { cursor: not-allowed; opacity: .42; }
-.page-fit-warning { margin-top: 10px !important; border-left: 3px solid #b34e45; padding: 8px 9px; color: #873d37 !important; background: #fff0ee; }
 
 .asset-control { margin-top: 12px; padding: 11px; border: 1px solid #dedbd2; border-radius: 8px; background: #fff; }
 .asset-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--navy); font-size: 11px; }
@@ -168,7 +167,6 @@ select { font: inherit; }
 .program-sheet [hidden] { display: none !important; }
 .program-sheet.hide-watermark { background: var(--paper); }
 .program-sheet + .program-sheet { margin-top: 30px; }
-.program-sheet.page-overflow { box-shadow: 0 0 0 3px #b34e45, 0 12px 45px rgb(19 35 55 / 18%); }
 .print-pages { display: none; }
 .print-pages.is-measuring { position: fixed; top: 0; left: -10000px; display: block; width: 794px; visibility: hidden; }
 .program-sheet.not-final-page > .verse-card, .program-sheet.not-final-page > .sheet-footer { display: none; }
@@ -359,6 +357,7 @@ select { font: inherit; }
     html, body { width: 210mm; min-height: 297mm; background: #fff; }
     .app-header, .editor-panel, .preview-label, .mobile-view-switch, .preview-sheet-stage { display: none !important; }
     .workspace, .preview-area { display: block; min-height: 0; padding: 0; overflow: visible; }
+    #previewArea { display: block; }
     #programSheet { display: none; }
     #printPages { display: block; }
     .program-sheet { width: 210mm; height: 297mm; min-height: 297mm; margin: 0; padding: 11mm 14mm 40mm; overflow: hidden; break-after: page; page-break-after: always; box-shadow: none; transform: none; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
