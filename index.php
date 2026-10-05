@@ -211,6 +211,7 @@ $ushersDefaultState = [
                 <label class="upload-button" for="logoInput">Seleccionar logo</label>
                 <input type="file" id="logoInput" accept="image/png,image/jpeg,image/webp" hidden>
                 <button class="text-button" type="button" id="removeLogoButton">Quitar imagen</button>
+                <button class="text-button" type="button" data-toggle-decoration="logo" data-decoration-label="el logo institucional">Ocultar el logo institucional</button>
                 <label class="range-label">Tamaño <span id="logoSizeValue"></span></label>
                 <input class="panel-range" type="range" data-design-setting="logoSize" data-output="logoSizeValue" min="40" max="180" step="5" aria-label="Tamaño del logo">
             </section>
@@ -231,6 +232,7 @@ $ushersDefaultState = [
                         <input type="file" id="headerImageInput" data-design-image="headerImage" accept="image/png,image/jpeg,image/webp" hidden>
                         <button type="button" data-remove-design-image="headerImage">Quitar</button>
                     </div>
+                    <button class="text-button" type="button" data-toggle-decoration="headerCenter" data-decoration-label="el fondo central de cabecera">Ocultar el fondo central de cabecera</button>
                     <input type="range" data-design-setting="headerHeight" data-output="headerHeightValue" min="60" max="300" step="5" aria-label="Altura de imagen de cabecera">
                     <label class="range-label">Opacidad <span id="headerOpacityValue"></span></label>
                     <input type="range" data-design-setting="headerOpacity" data-output="headerOpacityValue" data-unit="%" min="5" max="100" step="1">
@@ -243,6 +245,7 @@ $ushersDefaultState = [
                         <input type="file" id="headerLeftImageInput" data-design-image="headerLeftImage" accept="image/png,image/jpeg,image/webp" hidden>
                         <button type="button" data-remove-design-image="headerLeftImage">Quitar</button>
                     </div>
+                    <button class="text-button" type="button" data-toggle-decoration="headerLeft" data-decoration-label="la decoración izquierda de cabecera">Ocultar la decoración izquierda de cabecera</button>
                     <input type="range" data-design-setting="headerLeftSize" data-output="headerLeftSizeValue" min="60" max="380" step="5" aria-label="Tamaño de imagen izquierda">
                     <label class="range-label">Opacidad <span id="headerLeftOpacityValue"></span></label>
                     <input type="range" data-design-setting="headerLeftOpacity" data-output="headerLeftOpacityValue" data-unit="%" min="5" max="100" step="1">
@@ -255,6 +258,7 @@ $ushersDefaultState = [
                         <input type="file" id="headerRightImageInput" data-design-image="headerRightImage" accept="image/png,image/jpeg,image/webp" hidden>
                         <button type="button" data-remove-design-image="headerRightImage">Quitar</button>
                     </div>
+                    <button class="text-button" type="button" data-toggle-decoration="headerRight" data-decoration-label="la decoración derecha de cabecera">Ocultar la decoración derecha de cabecera</button>
                     <input type="range" data-design-setting="headerRightSize" data-output="headerRightSizeValue" min="60" max="380" step="5" aria-label="Tamaño de imagen derecha">
                     <label class="range-label">Opacidad <span id="headerRightOpacityValue"></span></label>
                     <input type="range" data-design-setting="headerRightOpacity" data-output="headerRightOpacityValue" data-unit="%" min="5" max="100" step="1">
@@ -267,6 +271,7 @@ $ushersDefaultState = [
                         <input type="file" id="watermarkImageInput" data-design-image="watermarkImage" accept="image/png,image/jpeg,image/webp" hidden>
                         <button type="button" data-remove-design-image="watermarkImage">Quitar</button>
                     </div>
+                    <button class="text-button" type="button" data-toggle-decoration="watermark" data-decoration-label="la marca de agua">Ocultar la marca de agua</button>
                     <label class="range-label">Tamaño</label>
                     <input type="range" data-design-setting="watermarkSize" data-output="watermarkSizeValue" min="80" max="700" step="10">
                     <label class="range-label">Opacidad <span id="watermarkOpacityValue"></span></label>
@@ -284,6 +289,7 @@ $ushersDefaultState = [
                         <input type="file" id="footerImageInput" data-design-image="footerImage" accept="image/png,image/jpeg,image/webp" hidden>
                         <button type="button" data-remove-design-image="footerImage">Quitar</button>
                     </div>
+                    <button class="text-button" type="button" data-toggle-decoration="footer" data-decoration-label="el pie de página">Ocultar el pie de página</button>
                     <input type="range" data-design-setting="footerHeight" data-output="footerHeightValue" min="60" max="320" step="5" aria-label="Altura de imagen de pie de página">
                     <label class="range-label">Opacidad <span id="footerOpacityValue"></span></label>
                     <input type="range" data-design-setting="footerOpacity" data-output="footerOpacityValue" data-unit="%" min="5" max="100" step="1">
@@ -296,6 +302,7 @@ $ushersDefaultState = [
                         <input type="file" id="verseFrameImageInput" data-design-image="verseFrameImage" accept="image/png,image/jpeg,image/webp" hidden>
                         <button type="button" data-remove-design-image="verseFrameImage">Quitar</button>
                     </div>
+                    <button class="text-button" type="button" data-toggle-decoration="verse" data-decoration-label="el cuadro del versículo">Ocultar el cuadro del versículo</button>
                     <input type="range" data-design-setting="verseHeight" data-output="verseHeightValue" min="120" max="360" step="5" aria-label="Altura del cuadro del versículo">
                     <label class="range-label">Posición horizontal de la cita</label>
                     <input type="range" data-design-setting="verseReferenceX" min="10" max="90" step="1">
@@ -436,6 +443,7 @@ $ushersDefaultState = [
     </script>
     <script src="<?= htmlspecialchars(asset_url('assets/date-rows.js'), ENT_QUOTES, 'UTF-8') ?>"></script>
     <script src="<?= htmlspecialchars(asset_url('assets/a4-layout.js'), ENT_QUOTES, 'UTF-8') ?>"></script>
+    <script src="<?= htmlspecialchars(asset_url('assets/decor-visibility.js'), ENT_QUOTES, 'UTF-8') ?>"></script>
     <script src="<?= htmlspecialchars(asset_url('assets/app.js'), ENT_QUOTES, 'UTF-8') ?>"></script>
 </body>
 </html>

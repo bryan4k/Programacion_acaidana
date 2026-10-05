@@ -260,14 +260,14 @@ function clean_image(mixed $value): string
 
 function template_row_capacity(array $design, string $templateType): int
 {
-    $logoExtra = max(0, $design['logoSize'] - 104);
     if ($templateType === 'ushers') {
         $rowHeight = max(40, $design['tableBodyFontSize'] * 2.4);
-        return max(1, (int) floor((1123 - 265 - $logoExtra) / $rowHeight));
+        return max(1, (int) floor((1123 - 265) / $rowHeight));
     }
     $rowHeight = max(45, $design['tableBodyFontSize'] * 2.7);
-    $available = 1123 - 300 - $logoExtra - $design['footerHeight'] - $design['verseHeight'] - 190;
-    return max(1, (int) floor(($available + 37.8) / $rowHeight));
+    // Decorative dimensions and internal padding do not reduce the physical
+    // A4 sheet. Keep only the fixed header/table lead-in reserve here.
+    return max(1, (int) floor((1123 - 300) / $rowHeight));
 }
 
 function validate_template(mixed $input): array
@@ -331,6 +331,15 @@ function validate_template(mixed $input): array
     $result['design'] = [];
     foreach (['headerImage', 'headerLeftImage', 'headerRightImage', 'watermarkImage', 'footerImage', 'verseFrameImage'] as $field) {
         $result['design'][$field] = clean_image($design[$field] ?? '');
+    }
+    $visibility = is_array($design['visibility'] ?? null) ? $design['visibility'] : [];
+    $result['design']['visibility'] = [];
+    foreach (['logo', 'headerLeft', 'headerRight', 'headerCenter', 'watermark', 'footer', 'verse'] as $element) {
+        $visible = $visibility[$element] ?? true;
+        if (!is_bool($visible)) {
+            throw new InvalidArgumentException('Uno de los ajustes de visibilidad no es válido.');
+        }
+        $result['design']['visibility'][$element] = $visible;
     }
     foreach ([
         'headerHeight' => [60, 300, 150],
