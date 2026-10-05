@@ -42,7 +42,7 @@ test('measured page overflow still fails at the physical A4 edge', () => {
     assert.match(app, /function allPagesFit\(\)[\s\S]*?isWithinA4OverflowTolerance\(page\.clientHeight, page\.scrollHeight/);
 });
 
-test('allows adding and saving over-capacity rows while print and Word export keep the fit guard', () => {
+test('allows adding and saving over-capacity rows while Word export keeps the fit guard', () => {
     const app = fs.readFileSync(require.resolve('../assets/app.js'), 'utf8');
     const index = fs.readFileSync(require.resolve('../index.php'), 'utf8');
     const saveTemplate = app.match(/async function saveTemplate\(asCopy = false\) \{([\s\S]*?)\n    function /)?.[1] || '';
@@ -57,7 +57,10 @@ test('allows adding and saving over-capacity rows while print and Word export ke
     assert.doesNotMatch(app, /pageFitWarning/);
     assert.doesNotMatch(index, /pageFitWarning|page-fit-warning/);
     assert.match(app, /function exportWord\(\)[\s\S]*?if \(!allPagesFit\(\)\)/);
-    assert.match(app, /printButton'\)\.addEventListener\('click', \(\) => \{\s*if \(!allPagesFit\(\)\)/);
+    const printAction = app.match(/document\.querySelector\('#printButton'\)\.addEventListener\('click', \(\) => \{([\s\S]*?)\n    \}\);/)?.[1] || '';
+    assert.ok(printAction);
+    assert.doesNotMatch(printAction, /allPagesFit\(\)|alert\(/);
+    assert.match(printAction, /buildPrintPages\(\)[\s\S]*window\.print\(\)/);
 });
 
 test('defaults legacy decorations to visible and persists independent hide settings without a table toggle', () => {

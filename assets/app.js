@@ -948,10 +948,6 @@
     document.querySelector('#movePageDownButton').addEventListener('click', () => moveProgramPage(1));
     document.querySelector('#deletePageButton').addEventListener('click', deleteProgramPage);
     document.querySelector('#printButton').addEventListener('click', () => {
-        if (!allPagesFit()) {
-            alert('Una de las programaciones no cabe en una hoja A4. Corrige las filas o tamaños antes de imprimir.');
-            return;
-        }
         buildPrintPages();
         window.print();
     });
