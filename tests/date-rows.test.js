@@ -13,15 +13,15 @@ test('keeps legacy rows to one line when the optional second date is absent', ()
     assert.deepEqual(formatProgramDates('2026-10-01', ''), ['Jueves 01 Oct.']);
 });
 
-test('allows A4 content overflow up to 10 mm but blocks larger overflow', () => {
-    assert.equal(isWithinA4OverflowTolerance(1123, 1123 + 37.8), true);
-    assert.equal(isWithinA4OverflowTolerance(1123, 1123 + 50), false);
-    assert.equal(isWithinA4OverflowTolerance(1123, 1123 + 10, 'ushers'), false);
+test('uses the physical A4 edge as the only overflow boundary', () => {
+    assert.equal(isWithinA4OverflowTolerance(1123, 1123), true);
+    assert.equal(isWithinA4OverflowTolerance(1123, 1123 + 1), false);
+    assert.equal(isWithinA4OverflowTolerance(1123, 1123 + 1, 'ushers'), false);
 });
 
-test('adds 10 mm of tolerance to the estimated worship row capacity', () => {
+test('does not subtract decoration sizes or internal footer and verse reserves from A4 row capacity', () => {
     const design = { tableBodyFontSize: 17, logoSize: 104, footerHeight: 310, verseHeight: 170 };
-    assert.equal(rowCapacity(design, 'worship'), 4);
+    assert.equal(rowCapacity(design, 'worship'), 17);
 });
 
 test('keeps usher row capacity unchanged by the worship-only tolerance', () => {

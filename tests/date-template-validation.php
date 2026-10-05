@@ -31,21 +31,21 @@ if (($validated['rows'][0]['date'] ?? null) !== '2026-10-01' || array_key_exists
     throw new RuntimeException('Legacy one-date rows did not remain compatible.');
 }
 
-$overflowRows = array_fill(0, 4, ['id' => 'row-overflow', 'date' => '2026-10-01']);
+$overflowRows = array_fill(0, 17, ['id' => 'row-overflow', 'date' => '2026-10-01']);
 $overflowTemplate = [
     'templateType' => 'worship',
     'headers' => ['', '', ''],
     'rows' => $overflowRows,
     'design' => ['footerHeight' => 310],
 ];
-if (count(validate_template($overflowTemplate)['rows']) !== 4) {
-    throw new RuntimeException('A worship page within the 10 mm A4 tolerance was rejected.');
+if (count(validate_template($overflowTemplate)['rows']) !== 17) {
+    throw new RuntimeException('A worship page within the physical A4 bounds was rejected due to internal decoration reserves.');
 }
 
-$overflowTemplate['rows'][] = ['id' => 'row-overflow-5', 'date' => '2026-10-01'];
+$overflowTemplate['rows'][] = ['id' => 'row-overflow-18', 'date' => '2026-10-01'];
 try {
     validate_template($overflowTemplate);
-    throw new RuntimeException('A worship page exceeding the 10 mm A4 tolerance was accepted.');
+    throw new RuntimeException('A worship page exceeding the estimated physical A4 row boundary was accepted.');
 } catch (InvalidArgumentException) {
     // Expected: larger overflow remains blocked to prevent clipping.
 }

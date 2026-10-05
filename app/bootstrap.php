@@ -260,14 +260,15 @@ function clean_image(mixed $value): string
 
 function template_row_capacity(array $design, string $templateType): int
 {
-    $logoExtra = max(0, $design['logoSize'] - 104);
     if ($templateType === 'ushers') {
+        $logoExtra = max(0, $design['logoSize'] - 104);
         $rowHeight = max(40, $design['tableBodyFontSize'] * 2.4);
         return max(1, (int) floor((1123 - 265 - $logoExtra) / $rowHeight));
     }
     $rowHeight = max(45, $design['tableBodyFontSize'] * 2.7);
-    $available = 1123 - 300 - $logoExtra - $design['footerHeight'] - $design['verseHeight'] - 190;
-    return max(1, (int) floor(($available + 37.8) / $rowHeight));
+    // Decorative dimensions and internal padding do not reduce the physical
+    // A4 sheet. Keep only the fixed header/table lead-in reserve here.
+    return max(1, (int) floor((1123 - 300) / $rowHeight));
 }
 
 function validate_template(mixed $input): array
