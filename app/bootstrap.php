@@ -261,9 +261,8 @@ function clean_image(mixed $value): string
 function template_row_capacity(array $design, string $templateType): int
 {
     if ($templateType === 'ushers') {
-        $logoExtra = max(0, $design['logoSize'] - 104);
         $rowHeight = max(40, $design['tableBodyFontSize'] * 2.4);
-        return max(1, (int) floor((1123 - 265 - $logoExtra) / $rowHeight));
+        return max(1, (int) floor((1123 - 265) / $rowHeight));
     }
     $rowHeight = max(45, $design['tableBodyFontSize'] * 2.7);
     // Decorative dimensions and internal padding do not reduce the physical

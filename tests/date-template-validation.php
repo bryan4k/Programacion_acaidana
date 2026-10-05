@@ -75,13 +75,17 @@ $ushersTemplate = [
     'templateType' => 'ushers',
     'headers' => ['', '', ''],
     'rows' => array_fill(0, 21, ['id' => 'usher-row', 'date' => '2026-10-01']),
-    'design' => ['logoSize' => 124],
+    'design' => ['logoSize' => 180],
 ];
+if (count(validate_template($ushersTemplate)['rows']) !== 21) {
+    throw new RuntimeException('A large decorative logo reduced usher rows still within the physical A4 bounds.');
+}
+$ushersTemplate['rows'][] = ['id' => 'usher-row-22', 'date' => '2026-10-01'];
 try {
     validate_template($ushersTemplate);
-    throw new RuntimeException('The worship-only tolerance increased usher row capacity.');
+    throw new RuntimeException('An usher page exceeding its estimated physical A4 row boundary was accepted.');
 } catch (InvalidArgumentException) {
-    // Expected: usher sheets retain their original row capacity.
+    // Expected: the physical A4 row capacity still blocks content beyond the sheet edge.
 }
 
 echo "Date template validation passed.\n";

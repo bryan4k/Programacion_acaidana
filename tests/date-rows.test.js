@@ -25,9 +25,11 @@ test('does not subtract decoration sizes or internal footer and verse reserves f
     assert.equal(rowCapacity(design, 'worship'), 17);
 });
 
-test('keeps usher row capacity unchanged by the worship-only tolerance', () => {
-    const design = { tableBodyFontSize: 17, logoSize: 124, footerHeight: 150, verseHeight: 170 };
-    assert.equal(rowCapacity(design, 'ushers'), 20);
+test('does not reduce usher row capacity for a large decorative logo', () => {
+    const baseDesign = { tableBodyFontSize: 17, logoSize: 104, footerHeight: 150, verseHeight: 170 };
+    const largeLogoDesign = { ...baseDesign, logoSize: 180 };
+    assert.equal(rowCapacity(baseDesign, 'ushers'), 21);
+    assert.equal(rowCapacity(largeLogoDesign, 'ushers'), 21);
 });
 
 test('defaults legacy decorations to visible and persists independent hide settings without a table toggle', () => {

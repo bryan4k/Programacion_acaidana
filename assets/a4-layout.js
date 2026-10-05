@@ -3,9 +3,8 @@
 (function (root) {
     function rowCapacity(design, templateType = 'worship') {
         if (templateType === 'ushers') {
-            const logoExtra = Math.max(0, Number(design.logoSize) - 104);
             const rowHeight = Math.max(40, Number(design.tableBodyFontSize) * 2.4);
-            return Math.max(1, Math.floor((1123 - 265 - logoExtra) / rowHeight));
+            return Math.max(1, Math.floor((1123 - 265) / rowHeight));
         }
         const rowHeight = Math.max(45, Number(design.tableBodyFontSize) * 2.7);
         // Reserve only the fixed header/table lead-in. Footer, verse, logo, and
