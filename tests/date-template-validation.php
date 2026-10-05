@@ -31,4 +31,36 @@ if (($validated['rows'][0]['date'] ?? null) !== '2026-10-01' || array_key_exists
     throw new RuntimeException('Legacy one-date rows did not remain compatible.');
 }
 
+$overflowRows = array_fill(0, 4, ['id' => 'row-overflow', 'date' => '2026-10-01']);
+$overflowTemplate = [
+    'templateType' => 'worship',
+    'headers' => ['', '', ''],
+    'rows' => $overflowRows,
+    'design' => ['footerHeight' => 310],
+];
+if (count(validate_template($overflowTemplate)['rows']) !== 4) {
+    throw new RuntimeException('A worship page within the 10 mm A4 tolerance was rejected.');
+}
+
+$overflowTemplate['rows'][] = ['id' => 'row-overflow-5', 'date' => '2026-10-01'];
+try {
+    validate_template($overflowTemplate);
+    throw new RuntimeException('A worship page exceeding the 10 mm A4 tolerance was accepted.');
+} catch (InvalidArgumentException) {
+    // Expected: larger overflow remains blocked to prevent clipping.
+}
+
+$ushersTemplate = [
+    'templateType' => 'ushers',
+    'headers' => ['', '', ''],
+    'rows' => array_fill(0, 21, ['id' => 'usher-row', 'date' => '2026-10-01']),
+    'design' => ['logoSize' => 124],
+];
+try {
+    validate_template($ushersTemplate);
+    throw new RuntimeException('The worship-only tolerance increased usher row capacity.');
+} catch (InvalidArgumentException) {
+    // Expected: usher sheets retain their original row capacity.
+}
+
 echo "Date template validation passed.\n";
