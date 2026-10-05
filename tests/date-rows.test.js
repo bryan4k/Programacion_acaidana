@@ -90,9 +90,17 @@ test('ignores image reads that complete after a newer selection', () => {
 });
 
 
-test('bounds the verse height by the remaining physical A4 space after the footer', () => {
-    assert.equal(availableVerseHeight(1123, 650, 90, 150, 18), 215);
-    assert.equal(availableVerseHeight(1123, 900, 90, 150, 18), 0);
+test('bounds the verse by actual coordinator content, not decorative footer height or sheet padding', () => {
+    assert.equal(availableVerseHeight(1123, 650, 90, 18), 365);
+    assert.equal(availableVerseHeight(1123, 1020, 90, 18), 0);
+    const app = fs.readFileSync(require.resolve('../assets/app.js'), 'utf8');
+    assert.doesNotMatch(app, /Number\(state\.design\.footerHeight\)\s*\|\|\s*0,\s*margin,/);
+});
+
+test('does not inject decorative footer height as program-sheet padding and retains the physical edge guard', () => {
+    const app = fs.readFileSync(require.resolve('../assets/app.js'), 'utf8');
+    assert.doesNotMatch(app, /\.program-sheet\s*\{\s*padding-bottom:\s*\$\{numeric\('footerHeight'\)\}px;/);
+    assert.match(app, /isWithinA4OverflowTolerance\(page\.clientHeight, page\.scrollHeight/);
 });
 
 test('keeps decorative footer imagery behind the sheet content in the shared export stylesheet', () => {

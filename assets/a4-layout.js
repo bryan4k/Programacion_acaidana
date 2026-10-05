@@ -16,8 +16,8 @@
         return scrollHeight <= clientHeight;
     }
 
-    function availableVerseHeight(sheetHeight, verseTop, footerHeight, bottomPadding, verseBottomMargin = 0) {
-        return Math.max(0, Math.floor(sheetHeight - verseTop - footerHeight - bottomPadding - verseBottomMargin));
+    function availableVerseHeight(sheetHeight, verseTop, coordinatorContentHeight, verseBottomMargin = 0) {
+        return Math.max(0, Math.floor(sheetHeight - verseTop - coordinatorContentHeight - verseBottomMargin));
     }
 
     if (typeof module !== 'undefined' && module.exports) module.exports = { rowCapacity, isWithinA4OverflowTolerance, availableVerseHeight };

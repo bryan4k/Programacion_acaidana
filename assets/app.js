@@ -372,7 +372,6 @@
             sheet.clientHeight,
             verse.offsetTop,
             footer.hidden ? 0 : footer.offsetHeight,
-            Number(state.design.footerHeight) || 0,
             margin,
         ) / 5) * 5;
         const minimum = Math.min(120, maximum);
@@ -427,7 +426,6 @@
             #defaultHeaderRight { font-size: ${Math.round(numeric('headerRightSize') * 0.52)}px; }
             #customWatermarkImage, .page-watermark { width: ${numeric('watermarkSize')}px; opacity: ${numeric('watermarkOpacity') / 100}; left: ${numeric('watermarkX')}%; top: ${numeric('watermarkY')}%; }
             #customFooterImage, #defaultFooter, .page-custom-footer, .page-default-footer { height: ${numeric('footerHeight')}px; opacity: ${numeric('footerOpacity') / 100}; }
-            .program-sheet { padding-bottom: ${numeric('footerHeight')}px; }
             .logo-wrap { height: ${Math.max(104, numeric('logoSize'))}px; }
             #churchLogo { max-width: ${numeric('logoSize')}px; max-height: ${numeric('logoSize')}px; }
             .verse-card { min-height: ${numeric('verseHeight')}px; }
