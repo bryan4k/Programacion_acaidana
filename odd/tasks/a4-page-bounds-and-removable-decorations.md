@@ -22,12 +22,12 @@ The current row-capacity estimate subtracts reserved internal space for the foot
 - Forecast: under 400 authored changed lines for this follow-up; `ask-on-risk` delivery strategy.
 
 ## Acceptance Criteria
-- [ ] Decorative sizing or internal margins do not block saving when all information remains within the outer A4 bounds.
-- [ ] Information crossing the physical A4 boundary continues to block save/export/print; printed sheet remains 210 × 297 mm.
-- [ ] Each named non-table decoration can be hidden and restored independently; its visibility persists after save/reload.
-- [ ] The main program table cannot be hidden or deleted.
-- [ ] Legacy templates without visibility settings still render all decorations by default.
-- [ ] Regression tests demonstrate RED before implementation and GREEN after; PHP syntax and diff checks pass.
+- [x] Decorative sizing or internal margins do not block saving when all information remains within the outer A4 bounds.
+- [x] Information crossing the physical A4 boundary continues to block save/export/print; printed sheet remains 210 × 297 mm.
+- [x] Each named non-table decoration can be hidden and restored independently; its visibility persists after save/reload.
+- [x] The main program table cannot be hidden or deleted.
+- [x] Legacy templates without visibility settings still render all decorations by default.
+- [x] Regression tests demonstrate RED before implementation and GREEN after; PHP syntax and diff checks pass.
 
 ## Checks
 - `node --test tests/date-rows.test.js`
