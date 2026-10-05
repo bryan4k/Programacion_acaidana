@@ -167,7 +167,6 @@ select { font: inherit; }
 .program-sheet [hidden] { display: none !important; }
 .program-sheet.hide-watermark { background: var(--paper); }
 .program-sheet + .program-sheet { margin-top: 30px; }
-.program-sheet.page-overflow { box-shadow: 0 0 0 3px #b34e45, 0 12px 45px rgb(19 35 55 / 18%); }
 .print-pages { display: none; }
 .print-pages.is-measuring { position: fixed; top: 0; left: -10000px; display: block; width: 794px; visibility: hidden; }
 .program-sheet.not-final-page > .verse-card, .program-sheet.not-final-page > .sheet-footer { display: none; }

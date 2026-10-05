@@ -376,8 +376,6 @@
         state.design.verseHeight = Math.min(maximum, Math.max(minimum, Number(state.design.verseHeight) || minimum));
         input.value = String(state.design.verseHeight);
         document.querySelector('#verseHeightValue').textContent = `${state.design.verseHeight} px`;
-        const overflow = sheet.scrollHeight > sheet.clientHeight;
-        sheet.classList.toggle('page-overflow', overflow);
     }
 
     function updateDesign() {
@@ -767,7 +765,6 @@
     function buildPageElement(pageData) {
         const page = sheet.cloneNode(true);
         page.removeAttribute('id');
-        page.classList.remove('page-overflow');
         page.querySelectorAll('[data-field]').forEach((element) => {
             element.textContent = pageData[element.dataset.field] || '';
         });

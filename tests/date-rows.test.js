@@ -63,6 +63,16 @@ test('allows adding and saving over-capacity rows while Word export keeps the fi
     assert.match(printAction, /buildPrintPages\(\)[\s\S]*window\.print\(\)/);
 });
 
+test('does not show a preview overflow state from internal scroll measurements', () => {
+    const app = fs.readFileSync(require.resolve('../assets/app.js'), 'utf8');
+    const css = fs.readFileSync(require.resolve('../assets/styles.css'), 'utf8');
+    const verseLimit = app.match(/function updateVerseHeightLimit\(\) \{([\s\S]*?)\n    function updateDesign/)?.[1] || '';
+    assert.ok(verseLimit);
+    assert.doesNotMatch(verseLimit, /scrollHeight|classList\.toggle\('page-overflow'/);
+    assert.doesNotMatch(app, /page-overflow/);
+    assert.doesNotMatch(css, /\.program-sheet\.page-overflow/);
+});
+
 test('defaults legacy decorations to visible and persists independent hide settings without a table toggle', () => {
     assert.deepEqual(normalizeDecorationVisibility(), {
         logo: true, headerLeft: true, headerRight: true, headerCenter: true,
