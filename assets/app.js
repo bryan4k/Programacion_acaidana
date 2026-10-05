@@ -212,10 +212,6 @@
 
     async function saveTemplate(asCopy = false) {
         if (busy) return;
-        if (!allPagesFit()) {
-            alert('Una de las programaciones no cabe en una hoja A4. Corrige las filas o tamaños antes de guardar.');
-            return;
-        }
         const name = templateName.value.trim();
         if (!name) {
             templateName.focus();
@@ -362,8 +358,29 @@
         }
     }
 
+    function updateVerseHeightLimit() {
+        const verse = sheet.querySelector('.verse-card');
+        const footer = sheet.querySelector('.sheet-footer');
+        const input = document.querySelector('[data-design-setting="verseHeight"]');
+        if (!verse || !footer || !input || verse.hidden) return;
+        const margin = Number.parseFloat(getComputedStyle(verse).marginBottom) || 0;
+        const maximum = Math.floor(A4Layout.availableVerseHeight(
+            sheet.clientHeight,
+            verse.offsetTop,
+            footer.hidden ? 0 : footer.offsetHeight,
+            margin,
+        ) / 5) * 5;
+        const minimum = Math.min(120, maximum);
+        input.min = String(minimum);
+        input.max = String(maximum);
+        state.design.verseHeight = Math.min(maximum, Math.max(minimum, Number(state.design.verseHeight) || minimum));
+        input.value = String(state.design.verseHeight);
+        document.querySelector('#verseHeightValue').textContent = `${state.design.verseHeight} px`;
+    }
+
     function updateDesign() {
         const design = state.design;
+        updateVerseHeightLimit();
         const images = {
             headerImage: document.querySelector('#headerDecorationImage'),
             headerLeftImage: document.querySelector('#headerLeftImage'),
@@ -384,7 +401,6 @@
 
         document.querySelector('#defaultHeaderLeft').hidden = Boolean(design.headerLeftImage);
         document.querySelector('#defaultHeaderRight').hidden = Boolean(design.headerRightImage);
-        document.querySelector('#defaultFooter').hidden = Boolean(design.footerImage);
         document.querySelector('.verse-card').classList.toggle('has-custom-frame', Boolean(design.verseFrameImage));
 
         const numeric = (field) => Number(design[field]);
@@ -396,7 +412,6 @@
             #defaultHeaderRight { font-size: ${Math.round(numeric('headerRightSize') * 0.52)}px; }
             #customWatermarkImage, .page-watermark { width: ${numeric('watermarkSize')}px; opacity: ${numeric('watermarkOpacity') / 100}; left: ${numeric('watermarkX')}%; top: ${numeric('watermarkY')}%; }
             #customFooterImage, #defaultFooter, .page-custom-footer, .page-default-footer { height: ${numeric('footerHeight')}px; opacity: ${numeric('footerOpacity') / 100}; }
-            .program-sheet { padding-bottom: ${numeric('footerHeight')}px; }
             .logo-wrap { height: ${Math.max(104, numeric('logoSize'))}px; }
             #churchLogo { max-width: ${numeric('logoSize')}px; max-height: ${numeric('logoSize')}px; }
             .verse-card { min-height: ${numeric('verseHeight')}px; }
@@ -418,23 +433,65 @@
             if (output) output.textContent = `${input.value}${input.dataset.unit || ' px'}`;
         });
         updateDecorationVisibility();
+        updateVerseHeightLimit();
     }
 
     function updateDecorationVisibility() {
         const visibility = normalizeDecorationVisibility(state.design.visibility);
         state.design.visibility = visibility;
         sheet.classList.toggle('hide-watermark', !visibility.watermark);
+        const imageReplacements = {
+            headerLeft: {
+                custom: '#headerLeftImage',
+                default: '#defaultHeaderLeft',
+                image: state.design.headerLeftImage,
+            },
+            headerRight: {
+                custom: '#headerRightImage',
+                default: '#defaultHeaderRight',
+                image: state.design.headerRightImage,
+            },
+            headerCenter: {
+                custom: '#headerDecorationImage',
+                default: '.standard-heading .ornament',
+                image: state.design.headerImage,
+            },
+        };
+        Object.entries(imageReplacements).forEach(([key, replacement]) => {
+            const visibilityState = ImageReplacement.imageReplacementVisibility(
+                visibility[key],
+                Boolean(replacement.image),
+            );
+            sheet.querySelectorAll(replacement.custom).forEach((element) => {
+                element.hidden = visibilityState.customImageHidden;
+            });
+            sheet.querySelectorAll(replacement.default).forEach((element) => {
+                const replacedByWatermark = ['headerLeft', 'headerRight'].includes(key)
+                    && !ImageReplacement.shouldShowDefaultArtwork(state.design.watermarkImage);
+                element.hidden = visibilityState.defaultArtworkHidden || replacedByWatermark;
+            });
+        });
+
         const selectors = {
             logo: ['#logoWrap'],
-            headerLeft: ['#headerLeftImage', '#defaultHeaderLeft'],
-            headerRight: ['#headerRightImage', '#defaultHeaderRight'],
-            headerCenter: ['#headerDecorationImage', '.standard-heading .ornament'],
             watermark: ['#customWatermarkImage'],
-            footer: ['#customFooterImage', '#defaultFooter', '.sheet-footer'],
             verse: ['.verse-card'],
         };
+        const footerHidden = documentState.templateType === 'ushers' || !visibility.footer;
+        const footerVisibility = ImageReplacement.footerDecorationVisibility(
+            !footerHidden,
+            Boolean(state.design.footerImage),
+        );
+        sheet.querySelectorAll('#customFooterImage').forEach((element) => {
+            element.hidden = footerVisibility.customImageHidden;
+        });
+        sheet.querySelectorAll('#defaultFooter').forEach((element) => {
+            element.hidden = footerVisibility.defaultArtworkHidden;
+        });
+
         Object.entries(selectors).forEach(([key, targets]) => {
-            const hidden = !visibility[key] || (documentState.templateType === 'ushers' && ['footer', 'verse'].includes(key));
+            const hidden = !visibility[key]
+                || (documentState.templateType === 'ushers' && ['footer', 'verse'].includes(key));
             targets.forEach((selector) => sheet.querySelectorAll(selector).forEach((element) => { element.hidden = hidden; }));
             const button = document.querySelector(`[data-toggle-decoration="${key}"]`);
             if (button) {
@@ -446,6 +503,8 @@
     }
 
     function readDesignImage(input) {
+        const readVersion = Number(input.dataset.readVersion || 0) + 1;
+        input.dataset.readVersion = String(readVersion);
         const [file] = input.files;
         if (!file) return;
         if (file.size > 2 * 1024 * 1024 || !['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
@@ -455,6 +514,7 @@
         }
         const reader = new FileReader();
         reader.addEventListener('load', () => {
+            if (!ImageReplacement.isCurrentImageRead(readVersion, Number(input.dataset.readVersion))) return;
             state.design[input.dataset.designImage] = reader.result;
             updateDesign();
             renderRows();
@@ -610,21 +670,10 @@
             controlsContainer.append(control);
         });
 
-        const capacity = pageCapacity();
-        const warning = document.querySelector('#pageFitWarning');
-        const exceeds = state.rows.length > capacity;
-        warning.hidden = !exceeds;
-        warning.textContent = exceeds ? `Esta programación tiene ${state.rows.length} filas y solo caben ${capacity}. Elimina filas o reduce los tamaños antes de guardar.` : '';
-        sheet.classList.toggle('page-overflow', exceeds);
-        document.querySelector('#addRowButton').disabled = state.rows.length >= capacity;
-        document.querySelector('#addRowButtonBottom').disabled = state.rows.length >= capacity;
+        updateVerseHeightLimit();
     }
 
     function addRow() {
-        if (state.rows.length >= pageCapacity()) {
-            alert('Esta hoja A4 ya está completa. Agrega otra programación para continuar.');
-            return;
-        }
         const previous = state.rows[state.rows.length - 1];
         let date = '';
         if (previous?.date) {
@@ -716,7 +765,6 @@
     function buildPageElement(pageData) {
         const page = sheet.cloneNode(true);
         page.removeAttribute('id');
-        page.classList.remove('page-overflow');
         page.querySelectorAll('[data-field]').forEach((element) => {
             element.textContent = pageData[element.dataset.field] || '';
         });
@@ -786,6 +834,7 @@
             if (row) row[rowField.dataset.rowField] = rowField.innerText.trim();
             if (documentState.templateType === 'ushers') applyUshersLayout(sheet, state);
         }
+        updateVerseHeightLimit();
         markDirty();
     });
 
@@ -823,6 +872,9 @@
     });
 
     document.querySelector('#logoInput').addEventListener('change', (event) => {
+        const input = event.target;
+        const readVersion = Number(input.dataset.readVersion || 0) + 1;
+        input.dataset.readVersion = String(readVersion);
         const [file] = event.target.files;
         if (!file) return;
         if (file.size > 2 * 1024 * 1024 || !['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
@@ -832,6 +884,7 @@
         }
         const reader = new FileReader();
         reader.addEventListener('load', () => {
+            if (!ImageReplacement.isCurrentImageRead(readVersion, Number(input.dataset.readVersion))) return;
             documentState.logo = reader.result;
             state.logo = documentState.logo;
             updateLogo();
@@ -841,9 +894,11 @@
     });
 
     document.querySelector('#removeLogoButton').addEventListener('click', () => {
+        const input = document.querySelector('#logoInput');
+        input.dataset.readVersion = String(Number(input.dataset.readVersion || 0) + 1);
         documentState.logo = '';
         state.logo = documentState.logo;
-        document.querySelector('#logoInput').value = '';
+        input.value = '';
         updateLogo();
         markDirty();
     });
@@ -890,10 +945,6 @@
     document.querySelector('#movePageDownButton').addEventListener('click', () => moveProgramPage(1));
     document.querySelector('#deletePageButton').addEventListener('click', deleteProgramPage);
     document.querySelector('#printButton').addEventListener('click', () => {
-        if (!allPagesFit()) {
-            alert('Una de las programaciones no cabe en una hoja A4. Corrige las filas o tamaños antes de imprimir.');
-            return;
-        }
         buildPrintPages();
         window.print();
     });

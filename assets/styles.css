@@ -94,7 +94,6 @@ select { font: inherit; }
 .page-actions button { min-height: 32px; border: 1px solid #b7c0cb; border-radius: 5px; color: var(--navy); background: #fff; font-size: 10px; font-weight: 700; }
 .page-actions #deletePageButton { color: #923f38; }
 .page-actions button:disabled, .add-row-button:disabled, .icon-button:disabled { cursor: not-allowed; opacity: .42; }
-.page-fit-warning { margin-top: 10px !important; border-left: 3px solid #b34e45; padding: 8px 9px; color: #873d37 !important; background: #fff0ee; }
 
 .asset-control { margin-top: 12px; padding: 11px; border: 1px solid #dedbd2; border-radius: 8px; background: #fff; }
 .asset-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--navy); font-size: 11px; }
@@ -168,7 +167,6 @@ select { font: inherit; }
 .program-sheet [hidden] { display: none !important; }
 .program-sheet.hide-watermark { background: var(--paper); }
 .program-sheet + .program-sheet { margin-top: 30px; }
-.program-sheet.page-overflow { box-shadow: 0 0 0 3px #b34e45, 0 12px 45px rgb(19 35 55 / 18%); }
 .print-pages { display: none; }
 .print-pages.is-measuring { position: fixed; top: 0; left: -10000px; display: block; width: 794px; visibility: hidden; }
 .program-sheet.not-final-page > .verse-card, .program-sheet.not-final-page > .sheet-footer { display: none; }
@@ -191,7 +189,7 @@ select { font: inherit; }
 }
 .ushers-sheet > #defaultFooter, .ushers-sheet > #defaultHeaderLeft, .ushers-sheet > #defaultHeaderRight { display: none; }
 .ushers-sheet .sheet-header { position: relative; min-height: 225px; padding: 2px 90px 0; }
-.ushers-sheet .logo-wrap { position: absolute; top: 5px; left: 0; width: 145px; }
+.ushers-sheet .logo-wrap { position: absolute; z-index: -1; top: 5px; left: 0; width: 145px; }
 .ushers-sheet .default-emblem { width: 100px; height: 100px; }
 .ushers-heading { text-align: center; }
 .ushers-church-name { max-width: 520px; margin: 0 auto 10px; color: #081e4b; font-weight: 700; line-height: 1.05; text-transform: uppercase; }
@@ -297,8 +295,8 @@ select { font: inherit; }
 .verse-card .reference { position: absolute; z-index: 2; max-width: 80%; font-size: 15px; white-space: nowrap; transform: translate(-50%, -50%); }
 .coordinators { line-height: 1.9; }
 
-.landscape-footer { position: absolute; z-index: 0; right: 0; bottom: 0; left: 0; height: 140px; overflow: hidden; color: #a8c8e2; opacity: .55; pointer-events: none; }
-.custom-footer-image { position: absolute; z-index: 0; right: 0; bottom: 0; left: 0; width: 100%; object-fit: contain; object-position: bottom center; pointer-events: none; }
+.landscape-footer { position: absolute; z-index: -1; right: 0; bottom: 0; left: 0; height: 140px; overflow: hidden; color: #a8c8e2; opacity: .55; pointer-events: none; }
+.custom-footer-image { position: absolute; z-index: -1; right: 0; bottom: 0; left: 0; width: 100%; object-fit: contain; object-position: bottom center; pointer-events: none; }
 .hills { position: absolute; right: -5%; bottom: -72px; left: -5%; height: 150px; border-radius: 50%; background: linear-gradient(160deg, #e6f2fa, #a8cce7); transform: rotate(-2deg); }
 .book { position: absolute; z-index: 2; bottom: 10px; left: 45px; font-size: 100px; transform: rotate(-8deg); }
 .chapel { position: absolute; z-index: 2; right: 65px; bottom: 17px; font-size: 95px; }
@@ -359,6 +357,7 @@ select { font: inherit; }
     html, body { width: 210mm; min-height: 297mm; background: #fff; }
     .app-header, .editor-panel, .preview-label, .mobile-view-switch, .preview-sheet-stage { display: none !important; }
     .workspace, .preview-area { display: block; min-height: 0; padding: 0; overflow: visible; }
+    #previewArea { display: block; }
     #programSheet { display: none; }
     #printPages { display: block; }
     .program-sheet { width: 210mm; height: 297mm; min-height: 297mm; margin: 0; padding: 11mm 14mm 40mm; overflow: hidden; break-after: page; page-break-after: always; box-shadow: none; transform: none; print-color-adjust: exact; -webkit-print-color-adjust: exact; }

@@ -258,18 +258,6 @@ function clean_image(mixed $value): string
     return $image;
 }
 
-function template_row_capacity(array $design, string $templateType): int
-{
-    if ($templateType === 'ushers') {
-        $rowHeight = max(40, $design['tableBodyFontSize'] * 2.4);
-        return max(1, (int) floor((1123 - 265) / $rowHeight));
-    }
-    $rowHeight = max(45, $design['tableBodyFontSize'] * 2.7);
-    // Decorative dimensions and internal padding do not reduce the physical
-    // A4 sheet. Keep only the fixed header/table lead-in reserve here.
-    return max(1, (int) floor((1123 - 300) / $rowHeight));
-}
-
 function validate_template(mixed $input): array
 {
     if (!is_array($input)) {
@@ -295,10 +283,6 @@ function validate_template(mixed $input): array
             if ($index === 0) {
                 $result['logo'] = $validated['logo'];
                 $result['design'] = $validated['design'];
-            }
-            $capacity = template_row_capacity($result['design'], $templateType);
-            if (count($validated['rows']) > $capacity) {
-                throw new InvalidArgumentException('Una programación contiene más filas de las que caben en una hoja A4.');
             }
             unset($validated['logo'], $validated['design']);
             $result['pages'][] = $validated;
@@ -354,7 +338,7 @@ function validate_template(mixed $input): array
         'watermarkY' => [0, 100, 46],
         'footerHeight' => [60, 320, 150],
         'footerOpacity' => [5, 100, 55],
-        'verseHeight' => [120, 360, 170],
+        'verseHeight' => [0, 1123, 170],
         'verseReferenceX' => [10, 90, 50],
         'verseReferenceY' => [55, 92, 86],
         'logoSize' => [40, 180, 100],
@@ -426,11 +410,6 @@ function validate_template(mixed $input): array
             ];
         }
         $result['rows'][] = $normalizedRow;
-    }
-
-    $capacity = template_row_capacity($result['design'], $templateType);
-    if (count($result['rows']) > $capacity) {
-        throw new InvalidArgumentException('Una programación contiene más filas de las que caben en una hoja A4.');
     }
 
     return $result;

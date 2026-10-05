@@ -303,7 +303,7 @@ $ushersDefaultState = [
                         <button type="button" data-remove-design-image="verseFrameImage">Quitar</button>
                     </div>
                     <button class="text-button" type="button" data-toggle-decoration="verse" data-decoration-label="el cuadro del versículo">Ocultar el cuadro del versículo</button>
-                    <input type="range" data-design-setting="verseHeight" data-output="verseHeightValue" min="120" max="360" step="5" aria-label="Altura del cuadro del versículo">
+                    <input type="range" data-design-setting="verseHeight" data-output="verseHeightValue" min="0" max="1123" step="5" aria-label="Altura del cuadro del versículo">
                     <label class="range-label">Posición horizontal de la cita</label>
                     <input type="range" data-design-setting="verseReferenceX" min="10" max="90" step="1">
                     <label class="range-label">Posición vertical de la cita</label>
@@ -344,7 +344,6 @@ $ushersDefaultState = [
                 <p id="rowSectionHelp">Activa “Fila especial” para unir Directores y Predicador en esa fecha.</p>
                 <div id="rowControls" class="row-controls"></div>
                 <button class="add-row-button" id="addRowButtonBottom" type="button">+ Agregar otra fecha</button>
-                <p class="page-fit-warning" id="pageFitWarning" hidden></p>
             </section>
 
             <div class="tip">
@@ -444,6 +443,7 @@ $ushersDefaultState = [
     <script src="<?= htmlspecialchars(asset_url('assets/date-rows.js'), ENT_QUOTES, 'UTF-8') ?>"></script>
     <script src="<?= htmlspecialchars(asset_url('assets/a4-layout.js'), ENT_QUOTES, 'UTF-8') ?>"></script>
     <script src="<?= htmlspecialchars(asset_url('assets/decor-visibility.js'), ENT_QUOTES, 'UTF-8') ?>"></script>
+    <script src="<?= htmlspecialchars(asset_url('assets/image-replacement.js'), ENT_QUOTES, 'UTF-8') ?>"></script>
     <script src="<?= htmlspecialchars(asset_url('assets/app.js'), ENT_QUOTES, 'UTF-8') ?>"></script>
 </body>
 </html>
