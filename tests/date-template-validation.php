@@ -64,11 +64,8 @@ if (count(validate_template($overflowTemplate)['rows']) !== 24) {
 }
 
 $overflowTemplate['rows'][] = ['id' => 'row-overflow-25', 'date' => '2026-10-01'];
-try {
-    validate_template($overflowTemplate);
-    throw new RuntimeException('A worship page exceeding the full-height A4 row estimate was accepted.');
-} catch (InvalidArgumentException) {
-    // Expected: the full-height row estimate still rejects rows above capacity.
+if (count(validate_template($overflowTemplate)['rows']) !== 25) {
+    throw new RuntimeException('A worship template exceeding the A4 estimate could not be saved.');
 }
 
 $ushersTemplate = [
@@ -81,11 +78,22 @@ if (count(validate_template($ushersTemplate)['rows']) !== 27) {
     throw new RuntimeException('Large decorative images reduced usher rows within the full-height A4 estimate.');
 }
 $ushersTemplate['rows'][] = ['id' => 'usher-row-28', 'date' => '2026-10-01'];
-try {
-    validate_template($ushersTemplate);
-    throw new RuntimeException('An usher page exceeding the full-height A4 row estimate was accepted.');
-} catch (InvalidArgumentException) {
-    // Expected: the full-height row estimate still rejects rows above capacity.
+if (count(validate_template($ushersTemplate)['rows']) !== 28) {
+    throw new RuntimeException('An usher template exceeding the A4 estimate could not be saved.');
+}
+
+$multiPageOverflowTemplate = [
+    'formatVersion' => 2,
+    'templateType' => 'worship',
+    'logo' => '',
+    'design' => ['headerHeight' => 300, 'footerHeight' => 320],
+    'pages' => [[
+        'headers' => ['', '', ''],
+        'rows' => array_fill(0, 25, ['id' => 'multi-page-overflow', 'date' => '2026-10-01']),
+    ]],
+];
+if (count(validate_template($multiPageOverflowTemplate)['pages'][0]['rows']) !== 25) {
+    throw new RuntimeException('A multi-page template exceeding the A4 estimate could not be saved.');
 }
 
 echo "Date template validation passed.\n";

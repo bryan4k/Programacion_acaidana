@@ -94,7 +94,6 @@ select { font: inherit; }
 .page-actions button { min-height: 32px; border: 1px solid #b7c0cb; border-radius: 5px; color: var(--navy); background: #fff; font-size: 10px; font-weight: 700; }
 .page-actions #deletePageButton { color: #923f38; }
 .page-actions button:disabled, .add-row-button:disabled, .icon-button:disabled { cursor: not-allowed; opacity: .42; }
-.page-fit-warning { margin-top: 10px !important; border-left: 3px solid #b34e45; padding: 8px 9px; color: #873d37 !important; background: #fff0ee; }
 
 .asset-control { margin-top: 12px; padding: 11px; border: 1px solid #dedbd2; border-radius: 8px; background: #fff; }
 .asset-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--navy); font-size: 11px; }

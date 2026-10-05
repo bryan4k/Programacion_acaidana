@@ -344,7 +344,6 @@ $ushersDefaultState = [
                 <p id="rowSectionHelp">Activa “Fila especial” para unir Directores y Predicador en esa fecha.</p>
                 <div id="rowControls" class="row-controls"></div>
                 <button class="add-row-button" id="addRowButtonBottom" type="button">+ Agregar otra fecha</button>
-                <p class="page-fit-warning" id="pageFitWarning" hidden></p>
             </section>
 
             <div class="tip">
