@@ -39,11 +39,11 @@ The current row-capacity estimate subtracts reserved internal space for the foot
 
 ## Progress
 - [x] Mapped the current checks and design controls across client, PHP, and CSS. Found that custom uploaded assets already have remove buttons; the missing behavior is independently hiding built-in/default decorations.
-- [x] A4-BND-1: Replace internal-margin/decoration overflow checks with physical A4-edge checks; keep save, print, Word export, and server validation consistent. Added regressions first (Node RED: 2 failures; PHP RED: rejected 17 rows), then removed worship footer/verse/logo reserves and 10 mm tolerance from client/server capacity checks. Client measured pages now reject any scroll-height beyond the fixed sheet height; usher capacity remains unchanged. GREEN: Node 5/5, PHP validation passed, PHP syntax passed, diff check passed. Browser smoke unavailable in this terminal-only session.
-- [ ] A4-DEC-1: Add persistent independent hide/restore controls for all listed non-table decorations, preserve legacy defaults, and prove the table cannot be hidden.
+- [x] A4-BND-1: Replace internal-margin/decoration overflow checks with physical A4-edge checks; keep save, print, Word export, and server validation consistent. Added regressions first (Node RED: 2 failures; PHP RED: rejected 17 rows), then removed worship footer/verse/logo reserves and 10 mm tolerance from client/server capacity checks. Client measured pages now reject any scroll-height beyond the fixed sheet height; usher capacity remains unchanged. GREEN: Node 5/5, PHP validation passed, PHP syntax passed, diff check passed. Browser smoke unavailable in this terminal-only session. Commit `a3c3511`; RDD assessment medium, `review_due=false` (`under_budget`).
+- [x] A4-DEC-1: Added independently persistent visibility switches for logo, left/right/center header layers, watermark, footer, and verse card; old templates default visible. Controls are reversible and accessible by changing action label; no table control exists. RED: Node test initially failed because the visibility helper did not exist; PHP legacy visibility assertion failed. GREEN: Node 6/6 and PHP validation passed, with PHP syntax, JS syntax, and diff checks passing. Browser smoke unavailable in this terminal-only session.
 
 ## Next Step
-Implement A4-DEC-1 with RED → GREEN evidence, then update this document and Engram mirror. Keep all work local until the user authorizes updating the open PR.
+Parent to review committed work and determine whether an authorized browser smoke can be performed. Keep all work local until the user authorizes updating the open PR.
 
 ## Relevant Files
 - `assets/a4-layout.js` — client row-capacity and physical A4-bound helpers.

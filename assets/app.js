@@ -24,6 +24,7 @@
 
     const clone = (value) => JSON.parse(JSON.stringify(value));
     const { rowCapacity, isWithinA4OverflowTolerance } = window.A4Layout;
+    const { normalizeDecorationVisibility } = window.DecorVisibility;
 
     function normalizePage(value, templateType = 'worship') {
         const defaults = clone(templateType === 'ushers' ? window.USHERS_DEFAULT_STATE : window.DEFAULT_STATE);
@@ -44,19 +45,23 @@
         const templateType = value?.templateType === 'ushers' ? 'ushers' : 'worship';
         const defaults = clone(templateType === 'ushers' ? window.USHERS_DEFAULT_STATE : window.DEFAULT_STATE);
         if (value && Array.isArray(value.pages) && value.pages.length) {
+            const design = { ...defaults.design, ...(value.design || {}) };
+            design.visibility = normalizeDecorationVisibility(design.visibility);
             return {
                 formatVersion: 2,
                 templateType,
                 logo: typeof value.logo === 'string' ? value.logo : '',
-                design: { ...defaults.design, ...(value.design || {}) },
+                design,
                 pages: value.pages.map((page) => normalizePage(page, templateType)),
             };
         }
+        const design = { ...defaults.design, ...(value?.design || {}) };
+        design.visibility = normalizeDecorationVisibility(design.visibility);
         return {
             formatVersion: 2,
             templateType,
             logo: typeof value?.logo === 'string' ? value.logo : '',
-            design: { ...defaults.design, ...(value?.design || {}) },
+            design,
             pages: [normalizePage(value || defaults, templateType)],
         };
     }
@@ -340,6 +345,7 @@
         document.querySelectorAll('[data-ushers-only]').forEach((element) => {
             element.hidden = !isUshers;
         });
+        updateDecorationVisibility();
     }
 
     function updateLogo() {
@@ -410,6 +416,32 @@
             input.value = design[input.dataset.designSetting];
             const output = input.dataset.output ? document.querySelector(`#${input.dataset.output}`) : null;
             if (output) output.textContent = `${input.value}${input.dataset.unit || ' px'}`;
+        });
+        updateDecorationVisibility();
+    }
+
+    function updateDecorationVisibility() {
+        const visibility = normalizeDecorationVisibility(state.design.visibility);
+        state.design.visibility = visibility;
+        sheet.classList.toggle('hide-watermark', !visibility.watermark);
+        const selectors = {
+            logo: ['#logoWrap'],
+            headerLeft: ['#headerLeftImage', '#defaultHeaderLeft'],
+            headerRight: ['#headerRightImage', '#defaultHeaderRight'],
+            headerCenter: ['#headerDecorationImage', '.standard-heading .ornament'],
+            watermark: ['#customWatermarkImage'],
+            footer: ['#customFooterImage', '#defaultFooter', '.sheet-footer'],
+            verse: ['.verse-card'],
+        };
+        Object.entries(selectors).forEach(([key, targets]) => {
+            const hidden = !visibility[key] || (documentState.templateType === 'ushers' && ['footer', 'verse'].includes(key));
+            targets.forEach((selector) => sheet.querySelectorAll(selector).forEach((element) => { element.hidden = hidden; }));
+            const button = document.querySelector(`[data-toggle-decoration="${key}"]`);
+            if (button) {
+                const label = `${visibility[key] ? 'Ocultar' : 'Mostrar'} ${button.dataset.decorationLabel}`;
+                button.textContent = label;
+                button.setAttribute('aria-label', label);
+            }
         });
     }
 
@@ -814,6 +846,15 @@
         document.querySelector('#logoInput').value = '';
         updateLogo();
         markDirty();
+    });
+    document.querySelectorAll('[data-toggle-decoration]').forEach((button) => {
+        button.addEventListener('click', () => {
+            const key = button.dataset.toggleDecoration;
+            state.design.visibility = normalizeDecorationVisibility(state.design.visibility);
+            state.design.visibility[key] = !state.design.visibility[key];
+            updateDesign();
+            markDirty();
+        });
     });
     document.querySelectorAll('[data-design-image]').forEach((input) => {
         input.addEventListener('change', () => readDesignImage(input));

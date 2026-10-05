@@ -30,6 +30,27 @@ $validated = validate_template($template);
 if (($validated['rows'][0]['date'] ?? null) !== '2026-10-01' || array_key_exists('secondDate', $validated['rows'][0])) {
     throw new RuntimeException('Legacy one-date rows did not remain compatible.');
 }
+if (($validated['design']['visibility']['logo'] ?? null) !== true || ($validated['design']['visibility']['verse'] ?? null) !== true) {
+    throw new RuntimeException('Legacy templates must default all decorations to visible.');
+}
+
+$visibilityTemplate = [
+    'templateType' => 'worship', 'headers' => ['', '', ''],
+    'rows' => [['id' => 'visible-row', 'date' => '2026-10-01']],
+    'design' => ['visibility' => ['logo' => false, 'footer' => false]],
+];
+$validated = validate_template($visibilityTemplate);
+if ($validated['design']['visibility']['logo'] !== false || $validated['design']['visibility']['footer'] !== false || $validated['design']['visibility']['watermark'] !== true) {
+    throw new RuntimeException('Independent decoration visibility settings were not preserved.');
+}
+
+$visibilityTemplate['design']['visibility']['footer'] = 'hidden';
+try {
+    validate_template($visibilityTemplate);
+    throw new RuntimeException('A non-boolean decoration visibility setting was accepted.');
+} catch (InvalidArgumentException) {
+    // Expected: visibility values must be booleans.
+}
 
 $overflowRows = array_fill(0, 17, ['id' => 'row-overflow', 'date' => '2026-10-01']);
 $overflowTemplate = [

@@ -333,6 +333,15 @@ function validate_template(mixed $input): array
     foreach (['headerImage', 'headerLeftImage', 'headerRightImage', 'watermarkImage', 'footerImage', 'verseFrameImage'] as $field) {
         $result['design'][$field] = clean_image($design[$field] ?? '');
     }
+    $visibility = is_array($design['visibility'] ?? null) ? $design['visibility'] : [];
+    $result['design']['visibility'] = [];
+    foreach (['logo', 'headerLeft', 'headerRight', 'headerCenter', 'watermark', 'footer', 'verse'] as $element) {
+        $visible = $visibility[$element] ?? true;
+        if (!is_bool($visible)) {
+            throw new InvalidArgumentException('Uno de los ajustes de visibilidad no es válido.');
+        }
+        $result['design']['visibility'][$element] = $visible;
+    }
     foreach ([
         'headerHeight' => [60, 300, 150],
         'headerOpacity' => [5, 100, 100],
