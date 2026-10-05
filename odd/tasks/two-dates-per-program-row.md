@@ -21,7 +21,7 @@ The program table currently stores and displays only one date per row. The user 
 - Forecast: under 400 authored changed lines; delivery strategy `ask-on-risk`.
 
 ## Acceptance Criteria
-- [x] DATE-1: Program rows now carry optional `secondDate`; row normalization/serialization preserve it and legacy rows remain valid. (No save/reload browser test was run.)
+- [x] DATE-1: Program rows now carry optional `secondDate`; row normalization/serialization preserve it and legacy rows remain valid. Browser save/reload/reselect confirmed the second date persisted.
 - [x] DATE-1: Both dates render as block-level lines through the shared row renderer used by preview, print, and Word export; an empty second date creates no line. Browser preview smoke confirmed the stacked appearance.
 - [x] DATE-1: PHP validation accepts a valid optional second worship date, rejects invalid dates, and leaves ushers on their existing date-only schema.
 - [x] DATE-1: Node and PHP tests observed RED before source implementation and GREEN after implementation; required syntax and diff checks passed.
@@ -30,12 +30,18 @@ The program table currently stores and displays only one date per row. The user 
 - `node --test tests/date-rows.test.js`
 - `php tests/date-template-validation.php`
 - `php -l app/bootstrap.php`
-- Browser smoke check: set both dates on one worship row, save/reload in local mode, and inspect stacked preview plus print/export output.
+- `php -l index.php`
+- `git diff --check`
+- Browser smoke check: set both dates on one worship row, save/reload/reselect in local mode, and inspect the stacked preview. Print-dialog and Word-download smoke remain unverified.
 
 ## Progress
 - [x] Explored the date-cell flow and identified client rendering, CSS, and server validation as affected areas.
 - [x] Confirmed no existing test files or runner; user authorized adding a minimal runner.
 - [x] DATE-1 implementation and checks. RED: Node failed because the shared date formatter did not exist; PHP failed because `secondDate` was dropped. GREEN: both test commands passed after implementation; browser preview displayed two stacked dates.
+- [x] Committed implementation as `7842cadd199b35fd602e587f0acabda50b6efdd1` (`feat: support two dates per program row`).
+- [x] Parent spot check: `node --test tests/date-rows.test.js` passed (2/2).
+- [x] Risk assessment: medium; review was not due (`under_budget`). User declined candidate-specific review; RDD remains enabled for future candidates.
+- [x] Browser smoke confirmed save, reload, and reselect retain the second date and render both dates stacked.
 
 ## Next Step
-Implementation and checks complete. Remaining limitation: no save/reload interaction or print-dialog/Word download smoke was performed; persistence and export paths were verified by code path sharing plus focused unit/validation tests.
+Implementation and checks complete. Browser smoke confirmed the second date appears stacked and persists after save/reload/reselect. Print-dialog and Word-download smoke remain unverified. The temporary browser test template `QA temporal - dos fechas 2026-10-05` could not be removed after the browser confirmation interaction timed out; delete it from the template list if it is not wanted.
