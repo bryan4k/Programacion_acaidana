@@ -262,12 +262,12 @@ function template_row_capacity(array $design, string $templateType): int
 {
     if ($templateType === 'ushers') {
         $rowHeight = max(40, $design['tableBodyFontSize'] * 2.4);
-        return max(1, (int) floor((1123 - 265) / $rowHeight));
+        return max(1, (int) floor(1123 / $rowHeight));
     }
     $rowHeight = max(45, $design['tableBodyFontSize'] * 2.7);
-    // Decorative dimensions and internal padding do not reduce the physical
-    // A4 sheet. Keep only the fixed header/table lead-in reserve here.
-    return max(1, (int) floor((1123 - 300) / $rowHeight));
+    // Decorative dimensions and fixed lead-in estimates do not reduce the
+    // physical A4 sheet; the rendered client page enforces its measured edge.
+    return max(1, (int) floor(1123 / $rowHeight));
 }
 
 function validate_template(mixed $input): array
