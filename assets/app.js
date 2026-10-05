@@ -430,7 +430,7 @@
             #customFooterImage, #defaultFooter, .page-custom-footer, .page-default-footer { height: ${numeric('footerHeight')}px; opacity: ${numeric('footerOpacity') / 100}; }
             .program-sheet { padding-bottom: ${numeric('footerHeight')}px; }
             .logo-wrap { height: ${Math.max(104, numeric('logoSize'))}px; }
-            #churchLogo { max-width: min(${numeric('logoSize')}px, 100%); max-height: ${numeric('logoSize')}px; }
+            #churchLogo { max-width: ${numeric('logoSize')}px; max-height: ${numeric('logoSize')}px; }
             .verse-card { min-height: ${numeric('verseHeight')}px; }
             .verse-card .reference { left: ${numeric('verseReferenceX')}%; top: ${numeric('verseReferenceY')}%; font-size: ${numeric('referenceFontSize')}px; }
             .church-name { font-size: ${numeric('churchNameFontSize')}px; }

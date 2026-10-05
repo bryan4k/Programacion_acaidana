@@ -191,7 +191,7 @@ select { font: inherit; }
 }
 .ushers-sheet > #defaultFooter, .ushers-sheet > #defaultHeaderLeft, .ushers-sheet > #defaultHeaderRight { display: none; }
 .ushers-sheet .sheet-header { position: relative; min-height: 225px; padding: 2px 90px 0; }
-.ushers-sheet .logo-wrap { position: absolute; top: 5px; left: 0; width: 90px; }
+.ushers-sheet .logo-wrap { position: absolute; z-index: -1; top: 5px; left: 0; width: 145px; }
 .ushers-sheet .default-emblem { width: 100px; height: 100px; }
 .ushers-heading { text-align: center; }
 .ushers-church-name { max-width: 520px; margin: 0 auto 10px; color: #081e4b; font-weight: 700; line-height: 1.05; text-transform: uppercase; }

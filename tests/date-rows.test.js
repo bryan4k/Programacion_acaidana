@@ -79,7 +79,9 @@ test('keeps decorative footer imagery behind the sheet content in the shared exp
     assert.match(css, /\.program-sheet\s*\{[^}]*isolation:\s*isolate;/);
 });
 
-test('keeps the usher logo within its reserved column so it cannot overlap heading text', () => {
+test('layers the usher logo behind heading text without resizing it', () => {
     const css = fs.readFileSync(require.resolve('../assets/styles.css'), 'utf8');
-    assert.match(css, /\.ushers-sheet\s+\.logo-wrap\s*\{[^}]*width:\s*90px;/);
+    const app = fs.readFileSync(require.resolve('../assets/app.js'), 'utf8');
+    assert.match(css, /\.ushers-sheet\s+\.logo-wrap\s*\{[^}]*z-index:\s*-1;[^}]*width:\s*145px;/);
+    assert.match(app, /#churchLogo \{ max-width: \$\{numeric\('logoSize'\)\}px;/);
 });
