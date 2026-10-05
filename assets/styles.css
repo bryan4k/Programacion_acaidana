@@ -357,6 +357,7 @@ select { font: inherit; }
     html, body { width: 210mm; min-height: 297mm; background: #fff; }
     .app-header, .editor-panel, .preview-label, .mobile-view-switch, .preview-sheet-stage { display: none !important; }
     .workspace, .preview-area { display: block; min-height: 0; padding: 0; overflow: visible; }
+    #previewArea { display: block; }
     #programSheet { display: none; }
     #printPages { display: block; }
     .program-sheet { width: 210mm; height: 297mm; min-height: 297mm; margin: 0; padding: 11mm 14mm 40mm; overflow: hidden; break-after: page; page-break-after: always; box-shadow: none; transform: none; print-color-adjust: exact; -webkit-print-color-adjust: exact; }

@@ -63,6 +63,12 @@ test('allows adding and saving over-capacity rows while Word export keeps the fi
     assert.match(printAction, /buildPrintPages\(\)[\s\S]*window\.print\(\)/);
 });
 
+test('print media restores preview area hidden by the mobile editor selector', () => {
+    const css = fs.readFileSync(require.resolve('../assets/styles.css'), 'utf8');
+    const printRules = css.match(/@media print\s*\{([\s\S]*?)\n\}/)?.[1] || '';
+    assert.match(printRules, /#previewArea\s*\{[^}]*display:\s*block/);
+});
+
 test('does not show a preview overflow state from internal scroll measurements', () => {
     const app = fs.readFileSync(require.resolve('../assets/app.js'), 'utf8');
     const css = fs.readFileSync(require.resolve('../assets/styles.css'), 'utf8');
