@@ -75,5 +75,11 @@ test('bounds the verse height by the remaining physical A4 space after the foote
 test('keeps decorative footer imagery behind the sheet content in the shared export stylesheet', () => {
     const css = fs.readFileSync(require.resolve('../assets/styles.css'), 'utf8');
     assert.match(css, /\.custom-footer-image\s*\{[^}]*z-index:\s*-1;/);
+    assert.match(css, /\.landscape-footer\s*\{[^}]*z-index:\s*-1;/);
     assert.match(css, /\.program-sheet\s*\{[^}]*isolation:\s*isolate;/);
+});
+
+test('keeps the usher logo within its reserved column so it cannot overlap heading text', () => {
+    const css = fs.readFileSync(require.resolve('../assets/styles.css'), 'utf8');
+    assert.match(css, /\.ushers-sheet\s+\.logo-wrap\s*\{[^}]*width:\s*90px;/);
 });
