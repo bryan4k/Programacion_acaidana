@@ -2,8 +2,9 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
 const { formatProgramDates } = require('../assets/date-rows.js');
-const { rowCapacity, isWithinA4OverflowTolerance } = require('../assets/a4-layout.js');
+const { rowCapacity, isWithinA4OverflowTolerance, availableVerseHeight } = require('../assets/a4-layout.js');
 const { normalizeDecorationVisibility } = require('../assets/decor-visibility.js');
 const { shouldShowDefaultArtwork, isCurrentImageRead, imageReplacementVisibility } = require('../assets/image-replacement.js');
 
@@ -63,4 +64,16 @@ test('keeps a custom replacement visible while hiding its fallback artwork', () 
 test('ignores image reads that complete after a newer selection', () => {
     assert.equal(isCurrentImageRead(1, 2), false);
     assert.equal(isCurrentImageRead(2, 2), true);
+});
+
+
+test('bounds the verse height by the remaining physical A4 space after the footer', () => {
+    assert.equal(availableVerseHeight(1123, 650, 90, 150, 18), 215);
+    assert.equal(availableVerseHeight(1123, 900, 90, 150, 18), 0);
+});
+
+test('keeps decorative footer imagery behind the sheet content in the shared export stylesheet', () => {
+    const css = fs.readFileSync(require.resolve('../assets/styles.css'), 'utf8');
+    assert.match(css, /\.custom-footer-image\s*\{[^}]*z-index:\s*-1;/);
+    assert.match(css, /\.program-sheet\s*\{[^}]*isolation:\s*isolate;/);
 });

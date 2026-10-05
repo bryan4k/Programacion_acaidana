@@ -303,7 +303,7 @@ $ushersDefaultState = [
                         <button type="button" data-remove-design-image="verseFrameImage">Quitar</button>
                     </div>
                     <button class="text-button" type="button" data-toggle-decoration="verse" data-decoration-label="el cuadro del versículo">Ocultar el cuadro del versículo</button>
-                    <input type="range" data-design-setting="verseHeight" data-output="verseHeightValue" min="120" max="360" step="5" aria-label="Altura del cuadro del versículo">
+                    <input type="range" data-design-setting="verseHeight" data-output="verseHeightValue" min="0" max="1123" step="5" aria-label="Altura del cuadro del versículo">
                     <label class="range-label">Posición horizontal de la cita</label>
                     <input type="range" data-design-setting="verseReferenceX" min="10" max="90" step="1">
                     <label class="range-label">Posición vertical de la cita</label>

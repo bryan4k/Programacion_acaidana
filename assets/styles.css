@@ -298,7 +298,7 @@ select { font: inherit; }
 .coordinators { line-height: 1.9; }
 
 .landscape-footer { position: absolute; z-index: 0; right: 0; bottom: 0; left: 0; height: 140px; overflow: hidden; color: #a8c8e2; opacity: .55; pointer-events: none; }
-.custom-footer-image { position: absolute; z-index: 0; right: 0; bottom: 0; left: 0; width: 100%; object-fit: contain; object-position: bottom center; pointer-events: none; }
+.custom-footer-image { position: absolute; z-index: -1; right: 0; bottom: 0; left: 0; width: 100%; object-fit: contain; object-position: bottom center; pointer-events: none; }
 .hills { position: absolute; right: -5%; bottom: -72px; left: -5%; height: 150px; border-radius: 50%; background: linear-gradient(160deg, #e6f2fa, #a8cce7); transform: rotate(-2deg); }
 .book { position: absolute; z-index: 2; bottom: 10px; left: 45px; font-size: 100px; transform: rotate(-8deg); }
 .chapel { position: absolute; z-index: 2; right: 65px; bottom: 17px; font-size: 95px; }

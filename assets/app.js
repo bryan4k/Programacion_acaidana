@@ -362,8 +362,40 @@
         }
     }
 
+    function updateVerseHeightLimit() {
+        const verse = sheet.querySelector('.verse-card');
+        const footer = sheet.querySelector('.sheet-footer');
+        const input = document.querySelector('[data-design-setting="verseHeight"]');
+        if (!verse || !footer || !input || verse.hidden) return;
+        const margin = Number.parseFloat(getComputedStyle(verse).marginBottom) || 0;
+        const maximum = Math.floor(A4Layout.availableVerseHeight(
+            sheet.clientHeight,
+            verse.offsetTop,
+            footer.hidden ? 0 : footer.offsetHeight,
+            Number(state.design.footerHeight) || 0,
+            margin,
+        ) / 5) * 5;
+        const minimum = Math.min(120, maximum);
+        input.min = String(minimum);
+        input.max = String(maximum);
+        state.design.verseHeight = Math.min(maximum, Math.max(minimum, Number(state.design.verseHeight) || minimum));
+        input.value = String(state.design.verseHeight);
+        document.querySelector('#verseHeightValue').textContent = `${state.design.verseHeight} px`;
+        const overflow = sheet.scrollHeight > sheet.clientHeight;
+        sheet.classList.toggle('page-overflow', overflow);
+        const warning = document.querySelector('#pageFitWarning');
+        if (warning) {
+            const rowsExceed = state.rows.length > pageCapacity();
+            warning.hidden = !overflow && !rowsExceed;
+            warning.textContent = overflow
+                ? 'El contenido excede el espacio disponible en la hoja A4. Reduce el texto o los tamaños antes de guardar.'
+                : rowsExceed ? `Esta programación tiene ${state.rows.length} filas y solo caben ${pageCapacity()}. Elimina filas o reduce los tamaños antes de guardar.` : '';
+        }
+    }
+
     function updateDesign() {
         const design = state.design;
+        updateVerseHeightLimit();
         const images = {
             headerImage: document.querySelector('#headerDecorationImage'),
             headerLeftImage: document.querySelector('#headerLeftImage'),
@@ -418,6 +450,7 @@
             if (output) output.textContent = `${input.value}${input.dataset.unit || ' px'}`;
         });
         updateDecorationVisibility();
+        updateVerseHeightLimit();
     }
 
     function updateDecorationVisibility() {
@@ -651,6 +684,7 @@
         sheet.classList.toggle('page-overflow', exceeds);
         document.querySelector('#addRowButton').disabled = state.rows.length >= capacity;
         document.querySelector('#addRowButtonBottom').disabled = state.rows.length >= capacity;
+        updateVerseHeightLimit();
     }
 
     function addRow() {
@@ -819,6 +853,7 @@
             if (row) row[rowField.dataset.rowField] = rowField.innerText.trim();
             if (documentState.templateType === 'ushers') applyUshersLayout(sheet, state);
         }
+        updateVerseHeightLimit();
         markDirty();
     });
 

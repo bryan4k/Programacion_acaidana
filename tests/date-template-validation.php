@@ -89,3 +89,14 @@ try {
 }
 
 echo "Date template validation passed.\n";
+
+
+$longVerseTemplate = [
+    'templateType' => 'worship',
+    'headers' => ['', '', ''],
+    'rows' => [['id' => 'long-verse', 'date' => '2026-10-01']],
+    'design' => ['verseHeight' => 900],
+];
+if (validate_template($longVerseTemplate)['design']['verseHeight'] !== 900) {
+    throw new RuntimeException('A verse height larger than the former 360px cap was not accepted.');
+}

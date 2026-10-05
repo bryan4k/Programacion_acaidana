@@ -16,6 +16,10 @@
         return scrollHeight <= clientHeight;
     }
 
-    if (typeof module !== 'undefined' && module.exports) module.exports = { rowCapacity, isWithinA4OverflowTolerance };
-    else root.A4Layout = { rowCapacity, isWithinA4OverflowTolerance };
+    function availableVerseHeight(sheetHeight, verseTop, footerHeight, bottomPadding, verseBottomMargin = 0) {
+        return Math.max(0, Math.floor(sheetHeight - verseTop - footerHeight - bottomPadding - verseBottomMargin));
+    }
+
+    if (typeof module !== 'undefined' && module.exports) module.exports = { rowCapacity, isWithinA4OverflowTolerance, availableVerseHeight };
+    else root.A4Layout = { rowCapacity, isWithinA4OverflowTolerance, availableVerseHeight };
 })(typeof window !== 'undefined' ? window : globalThis);

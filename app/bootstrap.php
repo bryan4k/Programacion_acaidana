@@ -354,7 +354,7 @@ function validate_template(mixed $input): array
         'watermarkY' => [0, 100, 46],
         'footerHeight' => [60, 320, 150],
         'footerOpacity' => [5, 100, 55],
-        'verseHeight' => [120, 360, 170],
+        'verseHeight' => [0, 1123, 170],
         'verseReferenceX' => [10, 90, 50],
         'verseReferenceY' => [55, 92, 86],
         'logoSize' => [40, 180, 100],
